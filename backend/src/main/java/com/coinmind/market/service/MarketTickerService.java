@@ -21,7 +21,9 @@ public class MarketTickerService {
     private final Sinks.Many<TickerSnapshot> updates =
             Sinks.many().multicast().onBackpressureBuffer(256, false);
 
-    public void publish(TickerSnapshot snapshot) {
+    public synchronized void publish(TickerSnapshot snapshot) {
+        var previous = latestBySymbol.get(snapshot.symbol());
+        if (previous != null && (snapshot.eventTime().isBefore(previous.eventTime()))) return;
         latestBySymbol.put(snapshot.symbol(), snapshot);
         lastEventAt.set(Instant.now());
         updates.tryEmitNext(snapshot);

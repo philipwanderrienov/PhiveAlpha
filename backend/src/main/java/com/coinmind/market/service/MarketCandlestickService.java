@@ -21,7 +21,9 @@ public class MarketCandlestickService {
     private final Sinks.Many<Candlestick> updates =
             Sinks.many().multicast().onBackpressureBuffer(256, false);
 
-    public void publish(Candlestick candlestick) {
+    public synchronized void publish(Candlestick candlestick) {
+        var previous = latestBySymbolAndInterval.get(candlestick.key());
+        if (previous != null && (candlestick.eventTime().isBefore(previous.eventTime()) || candlestick.openTime().isBefore(previous.openTime()) || (previous.closed() && !candlestick.closed() && previous.openTime().equals(candlestick.openTime())))) return;
         latestBySymbolAndInterval.put(candlestick.key(), candlestick);
         lastEventAt.set(Instant.now());
         updates.tryEmitNext(candlestick);

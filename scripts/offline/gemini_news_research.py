@@ -29,7 +29,7 @@ SCORE_FIELDS = ("newsId", "model", "titleFirstSeenUtc", "scoredUtc",
                 "btcRelevance", "sentiment", "impact", "rationale")
 SENTIMENT = frozenset(("BULLISH", "BEARISH", "NEUTRAL", "UNCERTAIN"))
 IMPACT = frozenset(("HIGH", "MEDIUM", "LOW", "UNKNOWN"))
-MODEL = "gemini-2.5-flash-lite"  # Explicit free-tier candidate, no paid fallback.
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")  # Explicit free-tier candidate, no paid fallback.
 API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/"
 MAX_ROWS = 100000
 

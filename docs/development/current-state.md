@@ -1,8 +1,140 @@
+## 2026-11-16 — CM-102 Provider Health & Recovery (local, NOT deployed)
+
+Manifold health now per BTCUSDT/ETHUSDT/SOLUSDT, with additive symbol/map and retained endpoint fields; UNKNOWN/UP/EMPTY/UNAVAILABLE, attempt timestamp/count, isolated cooldown/cache. Invalid JSON/non-array fails unavailable; cached success suppressed after failed refresh, NONE fallback never contributes advisor confidence/reasons. RSS read-only `/api/v1/news/source-health` reports each configured publisher, attempt/last-success, safe error, usable/invalid-date counts; 5s connect/10s response+total deadline. Missing/invalid/future dates skipped; NewsService rejects null/future updates without replacing valid history or publishing events. CoinDesk/Cointelegraph config and RFC1123 parser retained. No Angular changes.
+
+Final offline Maven clean verify: 210 passed, zero failures/errors/skips (Manifold4, RSS3, News3, Trade Setup6, CM-101 Binance9; Gemini regressions retained). git diff --check passed. No frontend tests required because Angular unchanged. Log: /tmp/coinmind-cm102-final-verify.log. CM-102 ready for release-candidate review; live upstream UAT remains. Full contract, file inventory and remaining upstream/compatibility limits: [CM-102 report](cm102-provider-health.md). Existing dirty work preserved on local main9bf10ce. No Gemini recovery/ledger/quota/circuit/freshness, Binance/CM-101, technical scoring or trading changes; no live Gemini/orders, .env/server config, production restart/deploy, commit/push/reset. CM-103 not started.
+
+## 2026-11-14 — CM-101 Market Data Reliability (local, NOT deployed)
+
+Binance ticker/kline/trade validation now requires exchange timestamps within30s old/5s future tolerance; malformed fields and invalid candles rejected. Shared WS reconnect handles graceful completion and errors (existing30s receive timeout,2–30s backoff). Cache/history reject regressions/reopening closed candles. REST candle bootstrap/repair has10s deadline, validates complete ordered contiguous/fresh history and retries only invalid/stale series every60s. ContextBuilder blocks advisor scoring for unavailable/stale/invalid ticker/history/book/trades. Feed health exposes per-symbol/timeframe exchange freshness and explicit UNAVAILABLE; Angular LIVE requires fresh selected ticker/candle plus UP health. Advisor-only retained.
+
+Final Maven offline clean verify205 passed (9 CM-101 regression methods), zero failures/errors/skips; Angular production build passed with existing template warnings; freshness8, AI labels10, News41, Tutorial41 plus News request regressions passed; diff whitespace passed. Logs /tmp/coinmind-cm101-{clean-verify,angular}.log. Earlier overlapping Maven runs caused invalid build-artifact failures; excluded from acceptance, final run sequential and clean. Full audit/source rationale/limits: [CM-101 report](cm101-market-data-reliability.md). Binance Spot bookTicker has local receipt time only; REST current candle uses fetch observation time plus exchange open/close times. No real upstream/socket/browser UAT claimed; end-to-end Sprint DoD awaits that acceptance. Local main9bf10ce inspected, prior dirty work preserved. No Gemini/ledger/quota/key/Manifold/RSS/config/.env/production change, order, commit/push/reset/deployment; CM-102 not started.
+
+## 2026-11-14 — CM-106 desktop UAT follow-up (local, NOT deployed)
+
+Sidebar now has one Tutorial link; module list remains in Tutorial Center. News distinguishes RSS loading, empty, available and failure; sentiment shows loading/unavailable instead of premature zero counts. Request generations reject stale symbol/request responses. Article step waits up to5 seconds for the first actual news card, then highlights the list as a nonblocking fallback; late cards are reacquired. Popover chooses top/bottom/left/right by available viewport space and clamps collisions, with directional markers. Animation-frame target reacquisition/geometry updates and capture-phase scroll handling track navigation, nested scrolling, resizing and asynchronous layout; teardown cancels tracking. Inert shell and blocker retain action protection, including AI; keyboard/navigation/focus controls retained, initial Shift+Tab corrected.
+
+Validation: Angular production build passed (existing template warnings); tutorial41 isolated unit cases plus actual News request-handler regressions (delayed loading/empty/data/failure/stale responses), News41 and AI-label10 passed; diff whitespace passed. No Angular general test target configured. Browser launch failed sandbox EPERM (Operation not permitted); actual desktop/mobile visuals, target/popover alignment under real sticky/nested scrolling, pointer/touch interception, focus return and screen-reader behavior remain unverified. Logs /tmp/coinmind-cm106-uat-{build,browser}.log. Local main9bf10ce inspected; remote-main query blocked by existing SSH include permissions. No backend/Gemini/ledger/production configuration changes, commit/push/reset or deployment. Prior dirty work preserved.
+
+## 2026-11-13 — CM-106 Interactive Tutorial (local, NOT deployed)
+
+Sidebar Tutorial includes Tutorial Center, working Mengenal Dashboard module (10 Indonesian steps), and upcoming modules. Local reusable Angular guided-tour component highlights stable data-tour-id targets on original UI; automatically switches Dashboard/News, opens mobile sidebar and news details, scrolls targets, supports previous/next/restart/skip/exit/completion, Escape/arrows, focus containment/return, resize tracking and teardown. App shell is inert while touring; tour has no API dependencies, Gemini calls, trade execution or configuration writes. Existing polling remains unchanged. Progress is session memory only.
+
+Driver.js 1.4.0 evaluated, but npm installation failed EAI_AGAIN; offline attempt ENOTCACHED. No dependency added. Local Angular engine is the implemented fallback; external guided-tour library requirement is still outstanding. 27 isolated tutorial unit cases (Angular/DOM adapters), 41 News and 10 AI-label cases passed. Angular production build passed with existing NG8102/NG8107 warnings after correcting ElementRef generic typing. Visual desktop/mobile/browser acceptance remains pending: all10 target positions, sticky header/scroll, sidebar visibility, narrow/landscape popover, keyboard/touch/focus, empty/news-loaded states and blocked AI interaction. Log /tmp/coinmind-cm106-build.log. No backend, production configuration, deployment, commit/push/reset changes; prior dirty work preserved. Local main9bf10ce inspected.
+
+## 2026-11-12 — News publisher UI (validated locally, NOT deployed)
+
+Angular news cards show explicit source names from API metadata (CoinDesk/Cointelegraph domain mapping, sanitized plain-text fallback), full publication date/time, title, optional two-line summary and original article HTTP(S) link. Invalid URLs render an unavailable label; links reject non-HTTP(S), credentials, malformed URLs/control characters and use noopener/noreferrer. Angular interpolation only, no raw RSS HTML. Existing symbol filtering, five-card limit, news scores, AI/manual actions and empty/loading flows retained. Responsive source wrapping and one-column cards below480px. No favicon/external logo requests.
+
+Validation:41 source/link unit cases and10 existing AI-status cases passed; Angular production build passed (existing template warnings). Browser smoke attempt blocked by sandbox Chromium EPERM; mobile/desktop visual acceptance remains unverified. Logs /tmp/coinmind-news-ui-{build,browser}.log; optional browser harness /tmp/coinmind-news-ui-browser.mjs. No backend, production config, service, deployment, commit or push changes. Prior dirty work preserved.
+
+## 2026-11-12 — Headline selection follow-up validation
+
+Existing selection fix retained and reviewed against the requested constraints. Added provider defensive-batch/no-HTTP regression and exact-24h service-to-provider mock success regression (7 headline tests total). Coordinator test verification now polls with Awaitility instead of Mockito timeout on synchronized NewsService methods, avoiding worker monitor contention; production recovery unchanged. Follow-up final validation results are recorded in the latest session-log entry. No deployment or live Gemini request.
+
+## 2026-11-12 — Gemini headline selection fix (validated locally, NOT deployed)
+
+Gemini news selection filters every symbol candidate using the provider's captured clock and shared field/24h eligibility rules before relevance-descending/publication-descending ranking, ID deduplication and limit five. Exact 24h cutoff is inclusive; future timestamps are excluded. Empty selection returns UNAVAILABLE without invoking AI. Provider validArticles remains the defensive batch guard. Existing non-Gemini selection, relevance thresholds, recovery/ledger/quota/circuit, automatic AI/trading and Manifold-only policy unchanged. No production release/deployment/config/.env changes or live Gemini requests. Regression tests use fixed clock and mock HTTP. Maven clean verify and final Maven verify: 194 tests passed, zero failures/errors/skips. Final log: /tmp/coinmind-headline-verify-final2.log. Intermediate mock JSON fixture and asynchronous coordinator timeout failures corrected; only test wait tolerance increased.
+
+## 2026-11-12 — Manifold-only conservative baseline accepted in /tmp (NOT deployed)
+
+- Production pointer observed `releases/baseline-phase15`; candidate `/opt/coinmind/releases/candidate-manifold-only` verified read-only. This supersedes earlier pre-migration host snapshots below. Production ledger `/var/lib/coinmind/ai-recovery` was not read or modified.
+- New sealed bundle `/tmp/coinmind-baseline-acceptance-wup4qyla/baseline`: **24 process/ledger checks passed**, lock exclusivity both directions, candidate→baseline rollback, OPEN/AUTH_ERROR/quota/HALF_OPEN byte preservation, candidate completed recovery retention, corrupt refusal; all17 test JVMs stopped, zero mock POSTs. Master AI/news/automatic AI literal false, Gemini selected for ledger locking, blank embedded key slots. Manifold/recovery/trading classes unchanged; retired providers absent. **READY FOR OPERATOR REVIEW**, no deployment authorization.
+- SHA256 manifest `78f86c861d93351d557d84c9dbf72c9c334b3d47ab3136879348ef33f461448a`; all8 artifacts/phase15-v1 verified. Release12 and isolated Maven189 passed; all230 compiled application classes match imported candidate. Candidate/old baseline/current unchanged. Details/config delta/limits: [acceptance report](manifold-baseline-acceptance.md).
+- Root-protected import, higher-precedence config audit (must not enable baseline AI or alter provider/ledger), real-ledger/singleton/infrastructure review and separately authorized activation remain required. /tmp read-only modes are not root-owned production immutability. No .env/key/attestation/service/Nginx/systemd/PhiveGarage/production change, real Gemini call, commit/push/reset. Remote-main query blocked by existing SSH include permissions; local main9bf10ce retained.
+
+# Current migration update — 2026-11-12
+
+Polymarket operational contracts/config/UI/AI interpretation removed; Manifold-only migration supersedes older incomplete-migration notes below. Advisor-only/Futures BLOCKED retained. Gemini recovery/ledger/quota/circuit/API credentials unchanged. No deployment, commit or push authorized. Validation: Maven clean verify **189 passed**, Angular production build passed (existing warnings), release/bootstrap **12 passed**, offline research **52 passed**, AI status **10 passed**. Operational source and packaged application contain no Polymarket references. Full changed-file inventory, residual-reference rationale and compatibility risks: [migration audit](manifold-only-migration.md).
+
 # Current Development State
 
-_Last updated: 2026-10-26 (Asia/Jakarta)_
+_Last updated: 2026-11-10 (Asia/Jakarta)_
 
 Dokumen ini adalah sumber kebenaran (handoff) untuk state CoinMind-AI saat ini. Baca file ini sebelum melakukan perubahan.
+
+## Phase 1.6 — bootstrap mechanism implemented, NOT executed (2026-11-10)
+
+- Separate `scripts/release/bootstrap_gemini_ledger.py`: explicit evidence/UTC cutoff, completed24h global project/key quiet period and stopped-client/no-unresolved-restriction acknowledgments. Private owner-controlled directory, Java-compatible exclusive lock, exact UNVERIFIED initial schema, fsynced non-overwriting atomic publication; existing/corrupt accounting or interruption remnants fail closed.
+- **12 targeted/release tests passed** (7 new,5 existing), including actual Java lock/schema probes. No app/bundle rebuild; activate.py and its gates unchanged. Mock-only preparation is separable; existing activation and Gemini-selected conservative baseline still require accounting. Detailed prerequisites/command/interruption guidance: production-release.md Phase1.6.
+- Production remains MOCK; real bootstrap, operator attestations and activation NOT performed. Global containment/trustworthy cutoff/full24h and longer restrictions, private provisioning, singleton/config/rollback/infrastructure acceptance remain operator requirements. No production/service/config/ledger mutation, live Gemini/orders or Git synchronization/commit/branch. Prior NO-GO remains in force until operator gates are met.
+
+## Final read-only migration audit — 2026-11-09: NO-GO
+
+- Both candidate/baseline reverified offline unchanged, no rebuild. Full status checklist and exact proposed operator sequence: [phase15-migration-readiness.md](phase15-migration-readiness.md); runbook updated. Conservative baseline remains READY for review, production migration NOT authorized.
+- Host inspection confirms active PID299694/8080/UP, safe status MOCK. Running JVM holds deleted legacy JAR inode17844963 (SHA f1d7bc859df3b47f72772c1583d206be2efd519388a78181b522251170850a4e),156 classes/no GeminiRecoveryState. Current on-disk target is different; NEVER use either legacy runtime or target path as rollback baseline. Archive actual deleted inode before a later authorized stop. Sole accepted baseline is the named conservative bundle after immutable import.
+- Legacy directory only zero-byte gemini.lock, no trustworthy accounting. Global singleton/scheduler containment and quiet-period T0/full rolling24h are unproven; approved post-quiet initialization still required. Current MOCK/old lock date do not establish project history. /opt/coinmind and /var/lib/coinmind absent; import/config/migration/real acceptance remain operator gates. No key/.env/process-environment/commandline inspection.
+- Effective systemd fields/host process metadata and complete readable Nginx include tree checked: CoinMind80->8080 and PhiveGarage127.0.0.1:8090->8081 have separate roots/services. Privileged nginx validation BLOCKED (sudo password required); future shared reload requires both-site acceptance. No root config dump saved.
+- SSH correction: host root-owned0777 symlink points to root-owned0644 vendor file; ssh-G parses successfully. Earlier nobody mapping is sandbox-specific; DO NOT chown/chmod the correct host include/target. Fix/avoid namespace mapping instead; remote authentication/main comparison remains unverified. Evidence /tmp/coinmind-final-readiness-evidence/. Documentation only; no service action, production mutation, credentials/live Gemini, Git sync/commit/branch or activation.
+
+## Conservative rollback baseline acceptance — 2026-11-09 (READY for review, NOT deployed)
+
+- Resolves the earlier isolated compatibility blocker: new conservative bundle `/tmp/coinmind-baseline-acceptance-zqwyj349/baseline` passed **22 packaged-process/persistence checks**, and **42 targeted Maven regressions** passed (8 suites). All 17 temporary JVMs stopped. Evidence/report and fixture snapshot in its parent directory; regression source/build `/tmp/coinmind-baseline-regression-87adful1`. Production JAR and prior candidate bundles preserved; fresh candidate not rebuilt.
+- Read-only inspection: every ZIP entry's contents in configured production-path JAR and earlier staged JAR matches fresh candidate (all 236 app classes/dependencies). On-disk JAR is ledger-compatible; running JVM provenance/live state remains unverified. Conservative configuration-only repack selects Gemini for ledger locking but fixes AI/news/automatic AI disabled and keys blank. Legacy synthetic enable variables cannot enable it. Only embedded application.yml changes; frontend/deterministic bytecode unchanged.
+- Baseline -> candidate -> baseline startup/shutdown/restart preserves existing synthetic ledger files byte-for-byte for OPEN, AUTH_ERROR, quota and HALF_OPEN; both lock directions and corrupt-ledger refusal passed. Candidate synthetic success survives baseline rollback with attempts retained; AUTH_ERROR remains blocking after 48h. Both apps return deterministic WATCH_BUY on mock data; Futures/live orders BLOCKED. Zero mock POSTs, no real credentials/live Gemini. Candidate tested with AI explicitly disabled; HTTP recovery validation remains mocked-regression/prior E2E evidence.
+- **Baseline READY for operator review; production migration remains gated, not authorized**: remote/source reconciliation, effective runtime/config/singleton ownership, trustworthy actual ledger migration (or quiet-period/initialization), root-owned import, infrastructure config/DB/health/UI acceptance and truthful attestations. Require existing valid shared ledger and forbid higher-precedence configuration enabling baseline AI; missing accounting cannot be reconstructed. Full evidence, hashes and exact remaining checklist: production-release.md conservative acceptance section. No service/config/live-ledger/.env/SSH change, commit/pull/push/branch, order execution or production activation.
+
+## Fresh release preparation audit — 2026-11-09 (NOT activated)
+
+- Fresh unique stage `/tmp/coinmind-phase15-audit-20261109-r1`: offline Maven **185 passed**, Angular production build and **10 status cases passed**; default activate.py offline verification passed, no authorization. All **295 source hashes / 7 artifacts** verified; no excluded sensitive paths, ledger, missing index assets or E2E fixture. Four non-authorized release tests passed. Toolchain Java 25.0.4.1/Maven 3.9.9/explicit Node 22.23.2; 762 installed package versions match lockfile. Default Node 20 is unsuitable. Evidence `/tmp/coinmind-phase15-audit-20261109-evidence/`; detailed checklist and limitations in `production-release.md` fresh audit section.
+- Existing research `.bak` is source-inventoried by broad staging but absent from deployable bundle; future curated release must decide its inclusion. All prior work/recovery retained. Handoff additions postdate staged snapshot. No application/tooling implementation changed.
+- **Migration BLOCKED**: legacy main lacks persistence; earlier candidate's 236 application classes match fresh tested candidate, but no conservative operational baseline/actual migration compatibility acceptance is established. SSH include nobody:nogroup/0777 fails before authentication; administrator ownership/mode repair needed in correct host namespace, then read-only remote-main retry. No SSH changes, pull/push/commit/branch change, service action, production mutation, .env read or live Gemini call.
+
+## Safe release preparation — 2026-11-09 (not deployed)
+
+- `deploy.sh` now defaults to a no-mutation plan; explicit staging copies source into temporary storage, runs Maven verify and Angular production/status checks, and produces a versioned bundle with artifact/source hashes. Existing active Maven target, frontend, `.env`, ledgers and unrelated dirty work retained.
+- Separate opt-in activation script requires root-owned bundles, compatible baseline, operator attestations, persistent `/var/lib/coinmind/ai-recovery` and migrated configuration. Shared `/opt/coinmind/current` selects backend/frontend together; stop-before-start and failed-activation rollback preserve the live ledger. No production command was run. Templates and detailed migration/rollback procedures: [production-release.md](production-release.md).
+- New script tests **5 passed**; isolated staging Maven **185 passed**, Angular production build and **10 status cases passed**; offline Python **52 passed**. Dry-run candidate verification passed. Shell syntax/Python compilation/diff whitespace checks passed; ShellCheck unavailable. Staged candidate `/tmp/coinmind-release-phase15-candidate`, log `/tmp/coinmind-release-stage.log`. Standard PostgreSQL/browser isolated evidence retained from previous session; not rerun for release tooling.
+- Blockers: remote main SSH permission failure; systemd bus unavailable inside sandbox; operator must establish single project/key owner, migrate/verify persistent state and compatible baseline, install reviewed configuration and perform infrastructure acceptance. Legacy in-memory/no-ledger migration requires rolling 24h quiet period and separate reviewed initialization. No commit/push/pull, deploy, active configuration mutation, service restart/reload, live Gemini/paid call or state reset.
+
+## Phase 1.5 isolated E2E — verified 2026-11-09 (local main, not deployed)
+
+- Full production Spring application exercised through loopback HTTP in test-only child JVMs with local Gemini/market WS mocks, dummy credentials, fake provider clock and temporary persistent ledgers. Actual 30-second scheduler initiated HALF_OPEN after 28.164s; delayed 8s Gemini did not stop WS-to-SSE updates or deterministic advisor HTTP (five paired checks 44–275ms). Real 503/cooldown/repeated backoff/validated 200/429 Retry-After/401/403, separate-process OPEN/quota/auth persistence, killed HALF_OPEN recovery and same-ledger process lock passed.
+- Separate-ledger race hazard reproduced: another JVM using the same mock key but a different ledger can admit another request. Exactly one enabled instance/project/key and a persistent absolute ledger path remain required; no distributed quota guarantee. No live AI call, new provider, trading-rule change or order execution.
+- Production Angular browser **18 checks passed**, widths 320/360/390/768/1024/1440, real HTTP state snapshots and polling, failed-fetch clearing, keyboard/aria disclosure, scoped axe zero violations. Found/fixed legacy mobile brand `width:100%` overriding badge reservation: scoped `width:auto` removes brand/status overlap and +60px document overflow. Final screenshots reviewed; all document widths equal viewport widths. This supersedes previous pending status-indicator browser acceptance (not whole-app accessibility certification).
+- Final standard Maven clean verify **185 passed**; isolated PostgreSQL archive/CSV/transaction IT **5 passed** on a new temporary cluster, now stopped; Python offline **52 passed**; production Angular build passed (existing warnings), label helper **10 passed**. General Angular test target absent. Provider-selection tests now isolate ledger under `@TempDir`; test control fixture confirmed absent from final production JAR.
+- Evidence, exact safety/configuration boundaries, repeat commands and proposed deployment sequence: `phase15-e2e-verification.md`. HTTP/browser artifacts `/tmp/coinmind-phase15-e2e-s6o2rgel/`; disposable DB artifacts `/tmp/coinmind-phase15-postgres-auttw65n/`. All child JVMs/servers and DB stopped. Main remains `9bf10ce`; remote comparison blocked by SSH configuration permissions. No branch, commit, push, deployment, unrelated deletion or production service restart. Previous edits retained.
+
+## Recovery audit — 2026-11-09 (local main, not deployed)
+
+- Follow-up audit reused all existing work; moved scheduled recovery subscription to boundedElastic so synchronized news reads and initial ledger I/O do not occupy Spring's shared scheduler. Added blocked-news-read/repeated-tick regression and adapted asynchronous tests. Full standard `mvn -f backend/pom.xml clean verify` passed outside sandbox: **185 tests**, zero failures/errors/skips. Python **52 passed**, Angular production build **passed** (existing template warnings), label helper **10 passed**. General Angular test target remains absent. Logs `/tmp/coinmind-phase15-audit-{final-maven,python,build}.log`.
+- Full working-tree inventory, security review and actual work eligibility are recorded in `gemini-news-phase1.md`, follow-up audit. A failed batch of still-valid headlines can be retried; no empty heartbeat or durable per-article exactly-once guarantee. Global AI freshness is last validated response, not all-symbol coverage. Browser/mobile/desktop E2E acceptance and opt-in PostgreSQL IT remain pending. Remote main comparison still blocked by SSH configuration permissions. No live Gemini request, commit, push, deploy, branch switch or production restart; unrelated files retained.
+- Reused existing Phase 1.5 implementation. Fixed earliest quota eligibility after reducing the daily cap: enough attempts must expire to fall below the new cap. Added persisted-ledger validation for unknown circuit/reason, negative failure count, excessive or unordered attempt history; invalid storage fails closed.
+- New fake-clock restart regressions cover reduced quota and corrupted ledger/lock release. Frontend label regression includes legacy DEGRADED, displayed as “AI Tidak Tersedia”. Existing single-instance/persistent-ledger limitations and required-AI WAIT behavior remain mandatory.
+- Final offline Maven verify with Mockito startup agent: **184 passed**; Python **52 passed**; frontend production build **passed** with existing template warnings; status helper **10 passed**. General Angular test target absent; browser visual acceptance and PostgreSQL IT not run. Remote main check blocked by local SSH configuration permissions. No live Gemini calls, commit, push, production restart or deployment.
+
+## Latest increment — Gemini Phase 1.5 recovery/status (2026-11-06; local main, not deployed)
+
+- Extends existing strict Gemini provider, cache, minute/day caps and news-service path. Scheduled bounded recovery uses real eligible fresh RSS work only; initial 503 cooldown five minutes, exponential jittered backoff capped one hour, single concurrent HALF_OPEN, recovery only after output validation. 429 Retry-After respected; 401/403 stop automatic attempts. No heartbeat, paid fallback or market-analysis wait.
+- Durable attempt/circuit/status ledger with exclusive process lock; requires exactly ONE Gemini-enabled instance per project/key on a persistent local directory (`-Dcoinmind.gemini.state-dir=/absolute/path`, default `data/ai-recovery`). Not distributed coordination. Preserve ledger across restart/deploy. Migration from old in-memory caps requires waiting a rolling 24h after the last old-process attempt. Auth failure is latched for operator intervention. See `gemini-news-phase1.md` Phase 1.5 for limitations.
+- Existing status API includes safe nested recovery state/reason/timestamps/eligibility/freshness. Sticky header polls every 30s: READY “AI Aktif”; ERROR/RATE_LIMITED “AI Sedang Mengalami Gangguan”; disabled/missing key “AI Belum Diaktifkan”; unverified/auth/mock/fetch error “AI Tidak Tersedia”. Accessible native disclosure gives freshness/times and deterministic/WAIT explanation. Mobile header reserves indicator space; browser visual acceptance pending.
+- Optional live strategy discloses deterministic-only analysis when AI absent; `coinmind.ai.required-for-entry=true` forces WAIT with no entry/targets. Gemini remains news-classification-only, so required mode conservatively waits even after Gemini recovery. Existing deterministic confidence is unchanged; no invented AI confidence.
+- Review validation: Maven offline clean verify with cached Mockito startup agent **182 passed**; Python **52 passed**; frontend production build and **9 status label cases passed**. Angular general test target absent; browser visual acceptance/PostgreSQL IT pending. Remote main verification blocked by local SSH configuration permissions. No live Gemini request, commit, push, branch switch, production restart or deployment. Preexisting uncommitted work preserved.
+
+## Latest investigation — Gemini UNAVAILABLE diagnostics (2026-11-05; uncommitted, not deployed)
+
+- Original generic UNAVAILABLE discarded transport/timeout/JSON/strict-validation errors. Existing local logs and latest 1000 backend journal lines do not identify the reported smoke failure. No confirmed request-schema/parser incompatibility; network/timeout, malformed/truncated/blocked or contract-invalid output remain hypotheses. RSS/health and Python success do not establish the backend Gemini path works.
+- Provider now logs only bounded error category, HTTP status, validated model, article count and generated local correlation UUID. No credentials, URLs, headlines, bodies, exception messages or stack traces. Separate HTTP 400/401/403/429/5xx/other, transport, timeout, invalid JSON, validation, empty/oversized response and internal categories. Fixed loss of known HTTP status when discarding an error body fails; empty strings are explicitly EMPTY_RESPONSE.
+- Strict validation, five-headline bound, 64 KiB response limit, no retry/fallback, rolling-day/minute caps, failed-attempt accounting and cache unchanged. Request serialization and realistic five-item responses covered by mocked tests; no live Gemini requests. Existing Phase 1, RSS, deterministic trading and Manifold-only policy preserved.
+- Validation: full `mvn -f backend/pom.xml clean verify -DargLine=-javaagent:/home/phive/.m2/repository/org/mockito/mockito-core/5.23.0/mockito-core-5.23.0.jar` **BUILD SUCCESS, 170 passed**, including 16 Gemini provider tests. Plain requested clean verify was run first and hit existing sandbox Mockito attachment restrictions (plus an empty-response test mismatch corrected before the passing run). Python offline **52 passed**. Default suite excludes opt-in PostgreSQL ITs. Logs: `/tmp/coinmind-gemini-diagnosis-agent-verify.log`, `/tmp/coinmind-gemini-diagnosis-python.log`.
+- Controlled single-attempt follow-up instructions and evidence limits: `docs/development/gemini-news-phase1.md`, UNAVAILABLE investigation section. Defer any attempt until the existing rolling-day budget is available; never restart to evade cap. Work remains on main; no commit, push, deployment or production restart.
+
+## Latest fix — replay repository startup proxies (2026-11-05; uncommitted, not deployed)
+
+- Removed `final` only from `FuturesPaperReplayArchive` and `FuturesPaperEquityArchive`. Boot 4.1.1 repository exception translation creates CGLIB proxies (`spring.aop.proxy-target-class` defaults true); both unconditional `@Repository` beans must be subclassable even with archival disabled. No `@Transactional` annotations caused this failure. The explicit `TransactionalOperator` / `R2dbcTransactionManager` summary-and-equity transaction, SQL, idempotency, validation and offline ordering are unchanged.
+- Added `FuturesReplayContextTest`: real Boot auto-configuration and complete internal replay service dependency graph, archival disabled/enabled, asserting both CGLIB exception-translation proxies and a reactive transaction manager. Both tests reproduced the exact final-class startup error before the fix and pass afterward. Other eight repository classes are non-final; no other transactional/async/cache/retry/aspect annotations or custom proxy configuration found in production sources.
+- Validation: Python offline **52 passed**. Plain `mvn -f backend/pom.xml clean verify` hit sandbox Mockito self-attachment restrictions (166 run, 2 failures/6 errors). Rerun with `-DargLine=-javaagent:/home/phive/.m2/repository/org/mockito/mockito-core/5.23.0/mockito-core-5.23.0.jar` **BUILD SUCCESS, 166 passed, zero failures/errors/skips**. PostgreSQL `*IT` tests are opt-in and outside the default Surefire suite; no isolated PostgreSQL database was used.
+- Isolated packaged-jar smoke attempted on `127.0.0.1:18080`, persistence/AI/automatic AI/Gemini news/archive/job/news/push/billing disabled, credentials cleared, DB and external market endpoints redirected to loopback, SQL initialization and R2DBC health disabled. Replay bean creation succeeded, but sandbox socket restrictions prevented Netty binding (`newSocketStream(..): Operation not permitted`); HTTP health could not be verified. Test JVM stopped; deployed service untouched. Unsandboxed execution rejected by current permission policy. Logs: `/tmp/coinmind-replay-agent-verify.log`, `/tmp/coinmind-replay-python.log`, `/tmp/coinmind-replay-smoke.log`; exact smoke harness: `/tmp/coinmind-replay-smoke.py`.
+- Remaining validation: rerun isolated loopback smoke where socket creation is permitted; optionally run existing PostgreSQL commit/rollback ITs against an explicitly disposable database. Existing Gemini work, Manifold-only policy, deterministic rules and data preserved. No commit, push, deployment, branch change or paid external API call. Local main remains `9bf10ce`; remote check blocked by SSH config ownership/permissions.
+
+## Latest increment — Gemini News Intelligence Phase 1 (2026-11-05; uncommitted, not deployed)
+
+- Explicit `AI_PROVIDER=gemini`, master `AI_ENABLED=true`, separate `GEMINI_NEWS_ENABLED=true`, and secured `GEMINI_API_KEY` enable live public headline classification only. Configurable model defaults to `gemini-3.5-flash-lite`, matching the user's manual HTTP 200 test and preexisting local offline-script edit. Application defaults remain OpenAI/disabled. Exactly one provider bean for configured, absent or unknown selection.
+- Strict generateContent JSON/identity/classification/relevance validation, 64 KiB response limit, bounded timeouts, no redirects/retries/fallback; five headlines, one request/minute, at most ten per rolling day (may reduce via config). Exact article/content cache and in-flight deduplication, 15-minute maximum reuse, freshness checked on every access. Failures return `UNAVAILABLE`, never fake neutral sentiment. Credentials only in header/config, never result/log/URL.
+- Record compatibility: qualitative impact -> importance 75/50/25/0; relevance never becomes trading confidence, confidence remains zero and horizon NONE. Completion-time `analyzedAt`; no historical backdating/first-seen claims. Gemini is excluded from the existing deterministic news modifier. Trading analysis/review and prediction interpretation return unavailable without network calls.
+- Manifold remains the sole approved prediction-market provider. Runtime client is Manifold-only; legacy Polymarket-named interface/models/routes/config/frontend and old Gamma modifier checks require a separate migration, unchanged here. Older sections below are historical and do not authorize other prediction providers.
+- Full design/mapping/audit and exact controlled loopback smoke-test environment: `docs/development/gemini-news-phase1.md`. Local limits reset on restart and cannot certify the Google project's free billing tier. No Gemini price/accounting figures invented.
+- Validation: Python offline suite **52 passed**; `mvn -f backend/pom.xml clean verify` **BUILD SUCCESS, 164 tests passed**, including 17 new provider/selection/isolation/status tests. Mockito attachment required the approved run outside the sandbox. No live Gemini request, commit, push, deploy or production restart performed. Preexisting offline script edit/untracked files preserved. Futures production remains BLOCKED.
 
 ## Product state
 
@@ -12,7 +144,7 @@ CoinMind-AI adalah aplikasi crypto market intelligence dan trade-advisor / decis
 - ETHUSDT
 - SOLUSDT
 
-Decision Engine deterministic/multi-timeframe tetap menjadi sumber rekomendasi utama. AI News Intelligence dan Polymarket hanya berfungsi sebagai bounded supporting signals dan tidak boleh menciptakan BUY/SELL secara independen.
+Decision Engine deterministic/multi-timeframe tetap menjadi sumber rekomendasi utama. AI News Intelligence hanya berfungsi sebagai bounded supporting signals dan tidak boleh menciptakan BUY/SELL secara independen.
 
 Scope produk sudah diputuskan sebagai **advisor-only**. CoinMind tidak mengeksekusi order ke Binance/exchange. Output BUY/SELL/WATCH, entry, target, dan invalidation adalah rekomendasi yang harus dieksekusi manual oleh user di exchange.
 
@@ -48,38 +180,7 @@ http://localhost:8080/
 
 ## Deployment workflow
 
-### Frontend
-
-```bash
-cd /home/phive/Documents/CoinMind-AI
-git pull origin main
-
-cd frontend
-npm run build
-
-sudo rm -rf /var/www/coinmind/*
-sudo cp -r dist/coinmind-web/browser/* /var/www/coinmind/
-sudo systemctl reload nginx
-```
-
-### Backend
-
-```bash
-cd /home/phive/Documents/CoinMind-AI
-git pull origin main
-
-cd backend
-mvn clean package -DskipTests
-sudo systemctl restart coinmind-backend
-sudo systemctl status coinmind-backend
-```
-
-Smoke test backend:
-
-```bash
-curl http://localhost:8080/actuator/health
-curl http://localhost:8080/api/v1/trade/setup/BTCUSDT/1m
-```
+Use the preparation-only `deploy.sh` and the separately authorized activation workflow in [production-release.md](production-release.md). The former git-pull/target-JAR/destructive frontend deployment commands are retired. Production is still on the existing configuration; one-time migration is pending explicit authorization. Never restart to reset Gemini state.
 
 ## Navigation / responsive shell
 
@@ -210,89 +311,9 @@ AI News Intelligence menghasilkan:
 
 AI News hanya bounded modifier untuk Decision Engine.
 
-### Prediction source health
+### Manifold prediction context
 
-Because Polymarket access is officially blocked in Indonesia, CoinMind does not attempt to bypass ISP/regulatory blocking.
-
-A runtime source-health endpoint now exposes the last observed status of each prediction source:
-
-```text
-GET /api/v1/polymarket/source-health
-```
-
-Possible states:
-
-```text
-UNKNOWN
-UP
-EMPTY
-UNAVAILABLE
-```
-
-Tracked sources:
-
-```text
-POLYMARKET_GAMMA
-POLYMARKET_CLOB
-MANIFOLD
-```
-
-The endpoint records the last check time, concise failure/reachability detail, and last relevant signal count. It does not trigger a new network request by itself; it reports the state captured during normal refreshes.
-
-Important separation:
-
-- Gamma/CLOB/Manifold = prediction-market / forecast context.
-- CoinDesk/Cointelegraph RSS = news context.
-- Polymarket Gamma is not a news API.
-
-## Polymarket state
-
-Polymarket adalah prediction-market intelligence, bukan sumber berita.
-
-Market discovery sekarang memakai **multi-source failover**: Gamma `/events` sebagai primary, CLOB `/simplified-markets` sebagai secondary, lalu **Manifold public forecasting API** sebagai compliant third-source fallback jika Polymarket diblokir/unreachable. Frontend menampilkan source aktual agar provenance data tidak ambigu.
-
-Endpoint:
-
-```text
-GET  /api/v1/polymarket/{symbol}
-POST /api/v1/polymarket/{symbol}/refresh
-```
-
-Server pada 2026-10-21 terobservasi dapat resolve DNS `gamma-api.polymarket.com`, tetapi koneksi TCP/HTTPS dapat timeout.
-
-Hardening yang sudah masuk `main`:
-
-- Reactor Netty connect timeout default 5 detik
-- response/operation timeout default 8 detik
-- failure cooldown default 2 menit per symbol
-- fallback antar-source: Gamma events -> CLOB simplified markets -> Manifold search markets
-- source field ikut dikirim ke frontend (`POLYMARKET_GAMMA`, `POLYMARKET_CLOB`, `MANIFOLD`, `NONE`)
-- fallback ke last cached result bila semua source gagal
-- fallback ke neutral result bila cache belum ada
-- timeout/error expected dicatat sebagai warning ringkas tanpa full stack trace
-- failure Polymarket tidak boleh menjatuhkan backend atau Trade Decision
-
-Config:
-
-```text
-POLYMARKET_BASE_URL
-POLYMARKET_CLOB_BASE_URL
-PREDICTION_MANIFOLD_BASE_URL
-POLYMARKET_GAMMA_EVENT_LIMIT
-POLYMARKET_CLOB_PAGE_LIMIT
-POLYMARKET_CONNECT_TIMEOUT_MS
-POLYMARKET_RESPONSE_TIMEOUT_MS
-POLYMARKET_FAILURE_COOLDOWN_MS
-```
-
-Latest commits:
-
-```text
-accbf7a fix: harden Polymarket timeouts and fallback
-2276883 config: add Polymarket resilience settings
-```
-
-Backend Maven build dan smoke test pada `phive-server` masih perlu dijalankan setelah pull commit ini.
+Only Manifold public search is supported. GET `/api/v1/manifold/{symbol}`, POST `/api/v1/manifold/{symbol}/refresh`, GET `/api/v1/manifold/source-health`. The existing binary/open/35-day parser, timeouts, cooldown and fresh-cache behavior are retained. No directional trade modifier: probabilities remain neutral context; 24h probability change is unavailable. Legacy endpoints and AI prediction interpretation/benchmark execution have been removed. See [historical archive](prediction-market-legacy-archive.md) for retired contracts.
 
 ## AI & Usage state
 
@@ -305,12 +326,10 @@ Task routing:
 ```text
 Routine model
 - News Intelligence
-- Polymarket interpretation dengan materiality rendah/menengah
 
 Deep model
 - Manual/general market analysis
 - AI Decision Review
-- Polymarket interpretation dengan materiality tinggi
 ```
 
 Config:
@@ -392,75 +411,6 @@ Benchmark is manual only; there is no scheduled benchmark job.
 
 Frontend AI & Usage advanced details now shows the configured routine/deep models.
 
-### AI Polymarket Intelligence
-
-Polymarket sekarang memiliki dua layer terpisah:
-
-```text
-Polymarket API
-   ↓
-Deterministic parser / scorer
-   ↓
-PolymarketIntelligence
-   ↓
-Materiality gate + cache + budget guardrail
-   ↓ (hanya jika perlu)
-AI Polymarket Intelligence
-```
-
-Automatic AI call hanya layak jika deterministic data dianggap material, default:
-
-- absolute average probability change >= 3%
-- atau importance/relevance >= 80
-- atau materiality score >= 75
-
-Materiality tinggi memilih `AI_DEEP_MODEL`; kondisi lain memilih `AI_ROUTINE_MODEL`.
-
-AI input dibatasi ke structured data dan maksimum lima market teratas, bukan raw Polymarket payload penuh.
-
-AI output:
-
-- direction
-- importance
-- confidence
-- horizon
-- summary
-- catalysts
-- risks
-- contradictions
-- materiality score
-- actual model used
-
-Cache AI Polymarket default 60 menit. Repeated identical context menggunakan cache agar tidak membuang token.
-
-Automatic Polymarket AI calls juga menggunakan `AiBudgetGuardrailService` sehingga tunduk pada hourly/daily limit.
-
-Endpoints:
-
-```text
-GET  /api/v1/ai/polymarket-intelligence/{symbol}
-POST /api/v1/ai/polymarket-intelligence/{symbol}
-```
-
-GET hanya membaca cache/fallback deterministic dan tidak memaksa paid call.
-POST adalah manual analysis request.
-
-Config:
-
-```text
-AI_POLYMARKET_ENABLED
-AI_POLYMARKET_MIN_PROBABILITY_CHANGE
-AI_POLYMARKET_MIN_IMPORTANCE
-AI_POLYMARKET_DEEP_MATERIALITY_SCORE
-AI_POLYMARKET_CACHE_MINUTES
-```
-
-`AiProvider` tetap menjadi abstraction layer, sehingga provider lain dapat ditambahkan untuk benchmark tanpa mengubah service/use-case layer.
-
-AI Polymarket interpretation **belum menjadi modifier tambahan untuk Decision Engine**. Untuk sekarang ia ditampilkan sebagai advisor context/second opinion. Deterministic Polymarket modifier yang sudah dibatasi tetap menjadi satu-satunya Polymarket contribution ke Decision Engine sampai hasil AI layer dievaluasi.
-
-Frontend Prediction Market panel sekarang menampilkan deterministic layer dan AI interpretation layer secara terpisah.
-
 ## AI Billing / Cost Center
 
 Dedicated `AI Billing` view tracks CoinMind's own AI usage accounting:
@@ -535,57 +485,11 @@ BUY/SELL   <= 95
 
 This keeps the displayed confidence aligned with the recommendation state.
 
-## Pre-live AI readiness audit (2026-10-26)
-
-Paid AI must remain unconfigured until the server validates this increment.
-
-Key safety changes from the audit:
-
-- Manifold fallback is now restricted to markets closing within roughly one month and sorted by 24h volume.
-- Manifold static probability is no longer converted into an automatic bullish/bearish trading signal.
-- Only `POLYMARKET_GAMMA` may modify deterministic Trade Decision confidence; CLOB/Manifold remain context only.
-- Automatic paid forecast AI is disabled for fallback forecast sources.
-- `AI_AUTOMATIC_ENABLED=false` is now a separate master switch; adding an API key does not enable scheduled/event-triggered paid AI.
-- `AI_MAX_MONTHLY_SPEND_USD=0` is a hard fail-closed default.
-- Paid AI HTTP POSTs are blocked with HTTP 402 unless persistence is enabled and recorded monthly spend is below the configured hard cap.
-- AI guardrail status now exposes automatic-enabled state and monthly hard spend cap.
-
-Current safe first-live configuration should be:
-
-```text
-PERSISTENCE_ENABLED=true
-AI_ENABLED=true
-AI_PROVIDER=openai
-AI_AUTOMATIC_ENABLED=false
-AI_MAX_MONTHLY_SPEND_USD=<small deliberate amount>
-AI_CREDIT_BUDGET_USD=<optional internal reference>
-```
-
-Then verify one manual call / benchmark before considering automatic AI.
-
-Forecast-source policy:
-
-```text
-POLYMARKET_GAMMA -> decision-confidence modifier allowed (bounded)
-POLYMARKET_CLOB  -> context only
-MANIFOLD         -> short-horizon context only
-NONE             -> neutral fallback
-```
-
-Manifold API documentation labels the API alpha; it is acceptable as a resilient context source for this project, but should not be treated as equivalent to Polymarket temporal signal quality.
-
 ## Known open issues / priorities
 
 Urutan prioritas saat ini:
 
-1. **Validate AI Router + Polymarket AI pipeline di server**
-   - pull `main`
-   - Maven build
-   - restart backend
-   - test deterministic Polymarket endpoint
-   - test AI Polymarket GET fallback while AI is disabled
-   - verify frontend production build
-   - do not enable paid AI until environment/config has been reviewed
+1. Validate Manifold-only migration using offline tests; production deployment requires separate instructions.
 
 2. **Frontend shell visual validation**
    - production Angular build setelah commit `937f6c6`
@@ -625,7 +529,7 @@ frontend/src/app/features/market-chart/
 ## Important backend areas
 
 ```text
-backend/src/main/java/com/coinmind/polymarket/
+backend/src/main/java/com/coinmind/manifold/
 backend/src/main/resources/application.yml
 ```
 

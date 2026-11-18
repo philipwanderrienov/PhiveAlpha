@@ -6,8 +6,8 @@ import com.coinmind.ai.service.AiNewsIntelligenceService;
 import com.coinmind.ai.service.MarketContextBuilder;
 import com.coinmind.market.model.MarketActivityProfile;
 import com.coinmind.market.service.MarketActivityProfileService;
-import com.coinmind.polymarket.model.PolymarketIntelligence;
-import com.coinmind.polymarket.service.PolymarketIntelligenceService;
+import com.coinmind.manifold.model.ManifoldIntelligence;
+import com.coinmind.manifold.service.ManifoldIntelligenceService;
 import com.coinmind.trade.model.TradeSetup;
 import org.springframework.stereotype.Service;
 
@@ -42,19 +42,22 @@ public class TradeSetupService {
 
     private final MarketContextBuilder contextBuilder;
     private final MarketActivityProfileService activityProfileService;
+    @org.springframework.beans.factory.annotation.Value("${coinmind.ai.required-for-entry:false}")
+    private boolean aiRequiredForEntry;
+
     private final AiNewsIntelligenceService aiNewsIntelligenceService;
-    private final PolymarketIntelligenceService polymarketIntelligenceService;
+    private final ManifoldIntelligenceService manifoldIntelligenceService;
 
     public TradeSetupService(
             MarketContextBuilder contextBuilder,
             MarketActivityProfileService activityProfileService,
             AiNewsIntelligenceService aiNewsIntelligenceService,
-            PolymarketIntelligenceService polymarketIntelligenceService
+            ManifoldIntelligenceService manifoldIntelligenceService
     ) {
         this.contextBuilder = contextBuilder;
         this.activityProfileService = activityProfileService;
         this.aiNewsIntelligenceService = aiNewsIntelligenceService;
-        this.polymarketIntelligenceService = polymarketIntelligenceService;
+        this.manifoldIntelligenceService = manifoldIntelligenceService;
     }
 
     public Mono<TradeSetup> build(String symbol, String interval) {
@@ -64,7 +67,7 @@ public class TradeSetupService {
                         interval,
                         activity,
                         aiNewsIntelligenceService.latestFresh(symbol),
-                        polymarketIntelligenceService.latestFresh(symbol)
+                        manifoldIntelligenceService.latestFresh(symbol)
                 ));
     }
 
@@ -73,7 +76,7 @@ public class TradeSetupService {
             String interval,
             MarketActivityProfile activity,
             AiNewsIntelligence newsIntelligence,
-            PolymarketIntelligence polymarketIntelligence
+            ManifoldIntelligence manifoldIntelligence
     ) {
         Map<String, MarketContext> contexts = new LinkedHashMap<>();
 
@@ -108,7 +111,7 @@ public class TradeSetupService {
                 activity.currentActivity(),
                 activity.currentScore(),
                 newsIntelligence,
-                polymarketIntelligence,
+                manifoldIntelligence,
                 timeframeSignals(contexts)
         );
     }
@@ -144,7 +147,7 @@ public class TradeSetupService {
             String marketActivity,
             BigDecimal marketActivityScore,
             AiNewsIntelligence newsIntelligence,
-            PolymarketIntelligence polymarketIntelligence,
+            ManifoldIntelligence manifoldIntelligence,
             List<TradeSetup.TimeframeSignal> timeframes
     ) {
         BigDecimal strength = score.abs();
@@ -160,6 +163,8 @@ public class TradeSetupService {
                 marketActivity,
                 newsIntelligence
         );
+        boolean aiUnavailable = newsIntelligence == null || "UNAVAILABLE".equals(newsIntelligence.direction());
+        if (aiRequiredForEntry && aiUnavailable) action = "WAIT";
         int confidence = recommendationConfidence(
                 action,
                 confidence(
@@ -169,7 +174,7 @@ public class TradeSetupService {
                         regime,
                         marketActivity,
                         newsIntelligence,
-                        polymarketIntelligence,
+                        manifoldIntelligence,
                         side
                 )
         );
@@ -182,14 +187,18 @@ public class TradeSetupService {
                 marketActivity,
                 marketActivityScore,
                 newsIntelligence,
-                polymarketIntelligence,
+                manifoldIntelligence,
                 side,
                 timeframes
         );
         List<String> warnings = "WAIT".equals(action)
-                ? waitWarnings(context, alignmentScore, regime, marketActivity, newsIntelligence, polymarketIntelligence, side)
-                : setupWarnings(context, action, alignmentScore, regime, marketActivity, newsIntelligence, polymarketIntelligence, side);
+                ? waitWarnings(context, alignmentScore, regime, marketActivity, newsIntelligence, manifoldIntelligence, side)
+                : setupWarnings(context, action, alignmentScore, regime, marketActivity, newsIntelligence, manifoldIntelligence, side);
 
+        warnings = new java.util.ArrayList<>(warnings);
+        if (aiUnavailable) warnings.add(aiRequiredForEntry
+                ? "AI wajib belum tersedia: WAIT untuk entry baru. Analisis deterministik tetap berjalan."
+                : "AI tidak tersedia: rekomendasi ini hanya memakai analisis deterministik.");
         if ("WAIT".equals(action)) {
             return new TradeSetup(
                     context.symbol(),
@@ -458,7 +467,7 @@ public class TradeSetupService {
             String regime,
             String marketActivity,
             AiNewsIntelligence newsIntelligence,
-            PolymarketIntelligence polymarketIntelligence,
+            ManifoldIntelligence manifoldIntelligence,
             String side
     ) {
         int value = 30
@@ -490,7 +499,6 @@ public class TradeSetupService {
         }
 
         value += newsConfidenceAdjustment(newsIntelligence, side);
-        value += polymarketConfidenceAdjustment(polymarketIntelligence, side);
 
         return Math.max(25, Math.min(95, value));
     }
@@ -503,7 +511,7 @@ public class TradeSetupService {
             String marketActivity,
             BigDecimal marketActivityScore,
             AiNewsIntelligence newsIntelligence,
-            PolymarketIntelligence polymarketIntelligence,
+            ManifoldIntelligence manifoldIntelligence,
             String side,
             List<TradeSetup.TimeframeSignal> timeframes
     ) {
@@ -540,19 +548,13 @@ public class TradeSetupService {
             );
         }
 
-        if (polymarketIntelligence != null && polymarketIntelligence.marketCount() > 0) {
-            String relation = polymarketSupportsSide(polymarketIntelligence, side)
-                    ? "supports"
-                    : polymarketOpposesSide(polymarketIntelligence, side)
-                    ? "opposes"
-                    : "is neutral to";
+        if (manifoldIntelligence != null && manifoldIntelligence.marketCount() > 0) {
             reasons.add(
-                    "Forecast source " + polymarketIntelligence.source()
-                            + " " + relation + " the setup: "
-                            + polymarketIntelligence.bias().toLowerCase()
-                            + ", confidence " + polymarketIntelligence.confidence()
-                            + "%, avg 24h probability change "
-                            + scale(polymarketIntelligence.averageProbabilityChange())
+                    "Forecast source " + manifoldIntelligence.source()
+                            + " is neutral context for the setup: "
+                            + manifoldIntelligence.bias().toLowerCase()
+                            + ", confidence " + manifoldIntelligence.confidence()
+                            + "% (context only; 24h probability change unavailable)"
             );
         }
 
@@ -566,7 +568,7 @@ public class TradeSetupService {
             String regime,
             String marketActivity,
             AiNewsIntelligence newsIntelligence,
-            PolymarketIntelligence polymarketIntelligence,
+            ManifoldIntelligence manifoldIntelligence,
             String side
     ) {
         List<String> warnings = new ArrayList<>();
@@ -593,11 +595,7 @@ public class TradeSetupService {
             warnings.add("High-importance AI news intelligence conflicts with the technical setup; active entry is downgraded to watch");
         }
 
-        if (polymarketOpposesSide(polymarketIntelligence, side)
-                && polymarketIntelligence.confidence() >= 65
-                && polymarketIntelligence.importance() >= 70) {
-            warnings.add("Prediction-market signal conflicts with the technical setup");
-        }
+
 
         if (context.technical().rsi14().compareTo(BigDecimal.valueOf(70)) > 0) {
             warnings.add("RSI is elevated; avoid chasing price");
@@ -614,7 +612,7 @@ public class TradeSetupService {
             String regime,
             String marketActivity,
             AiNewsIntelligence newsIntelligence,
-            PolymarketIntelligence polymarketIntelligence,
+            ManifoldIntelligence manifoldIntelligence,
             String side
     ) {
         List<String> warnings = new ArrayList<>();
@@ -636,64 +634,9 @@ public class TradeSetupService {
             warnings.add("AI news intelligence currently conflicts with the weighted market direction");
         }
 
-        if (polymarketOpposesSide(polymarketIntelligence, side)) {
-            warnings.add("Prediction-market signal currently conflicts with the weighted market direction");
-        }
+
 
         return List.copyOf(warnings);
-    }
-
-    private int polymarketConfidenceAdjustment(
-            PolymarketIntelligence intelligence,
-            String side
-    ) {
-        if (intelligence == null
-                || !"POLYMARKET_GAMMA".equals(intelligence.source())
-                || intelligence.marketCount() == 0
-                || intelligence.importance() < 50
-                || intelligence.confidence() < 50) {
-            return 0;
-        }
-
-        if (polymarketSupportsSide(intelligence, side)) {
-            return intelligence.importance() >= 75
-                    && intelligence.confidence() >= 65
-                    ? 3
-                    : 1;
-        }
-
-        if (polymarketOpposesSide(intelligence, side)) {
-            return intelligence.importance() >= 75
-                    && intelligence.confidence() >= 65
-                    ? -3
-                    : -1;
-        }
-
-        return 0;
-    }
-
-    private boolean polymarketSupportsSide(
-            PolymarketIntelligence intelligence,
-            String side
-    ) {
-        if (intelligence == null || !"POLYMARKET_GAMMA".equals(intelligence.source())) {
-            return false;
-        }
-
-        return ("LONG".equals(side) && "BULLISH".equals(intelligence.bias()))
-                || ("SHORT".equals(side) && "BEARISH".equals(intelligence.bias()));
-    }
-
-    private boolean polymarketOpposesSide(
-            PolymarketIntelligence intelligence,
-            String side
-    ) {
-        if (intelligence == null || !"POLYMARKET_GAMMA".equals(intelligence.source())) {
-            return false;
-        }
-
-        return ("LONG".equals(side) && "BEARISH".equals(intelligence.bias()))
-                || ("SHORT".equals(side) && "BULLISH".equals(intelligence.bias()));
     }
 
     private boolean strongNewsContradiction(

@@ -23,6 +23,15 @@ class NewsServiceTest {
             mock(ApplicationEventPublisher.class)
     );
 
+    @Test void missingDateCannotReplaceHistoricalArticle() {
+        var old = Instant.parse("2020-01-01T00:00:00Z");
+        service.ingest("old", "Bitcoin", "coindesk", "", "", old);
+        service.ingest("old", "Bitcoin hack", "coindesk", "", "", null);
+        service.ingest("new", "Bitcoin hack", "coindesk", "", "", null);
+        assertThat(service.recent(20)).hasSize(1);
+        assertThat(service.recent(20).getFirst().publishedAt()).isEqualTo(old);
+    }
+
     @Test
     void tagsBitcoinAndCalculatesPositiveSentiment() {
         service.ingest(

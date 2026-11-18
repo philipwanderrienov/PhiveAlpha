@@ -1,3 +1,5 @@
+> Update 2026-11-12: legacy Polymarket cleanup completed in working tree; earlier migration tasks/descriptions below are historical. Runtime prediction provider is Manifold only. See current-state.md.
+
 # Futures Intraday Advisor readiness (2026-10-27)
 
 Status: PARTIAL — not production ready. Advisor-only, no order execution.

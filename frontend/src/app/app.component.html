@@ -1,4 +1,4 @@
-<div class="app-shell">
+<div class="app-shell" [attr.inert]="tutorialActive() ? '' : null">
   <aside class="app-sidebar" [class.open]="sidebarOpen()" aria-label="CoinMind menu">
     <div class="sidebar-brand">
       <div class="brand-mark">CM</div>
@@ -8,7 +8,7 @@
       </div>
     </div>
 
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" data-tour-id="navigation">
       <a
         href="#dashboard"
         [class.active]="activeSection() === 'dashboard'"
@@ -22,6 +22,7 @@
       </a>
 
       <a
+        data-tour-id="trade-menu"
         href="#trade"
         [class.active]="activeSection() === 'trade'"
         [attr.aria-current]="activeSection() === 'trade' ? 'page' : null"
@@ -80,6 +81,9 @@
           <small>Credit, token & cost center</small>
         </span>
       </a>
+      <a href="#view=tutorial" [class.active]="activeSection() === 'tutorial'"
+         [attr.aria-current]="activeSection() === 'tutorial' ? 'page' : null"
+         (click)="navigateToView('tutorial', $event)"><span><strong>Tutorial</strong><small>Pusat panduan penggunaan</small></span></a>
     </nav>
 
     <div class="sidebar-footer">
@@ -109,7 +113,7 @@
       (click)="toggleSidebar()">
       <span></span><span></span><span></span>
     </button>
-    <div class="brand">
+    <div class="brand" data-tour-id="welcome">
       <div class="brand-mark">CM</div>
       <div>
         <div class="brand-name">CoinMind <span>AI</span></div>
@@ -117,9 +121,23 @@
       </div>
     </div>
 
+    <details class="header-ai-status">
+      <summary [attr.aria-label]="'Detail status AI: ' + aiStatusLabel()">{{ aiStatusLabel() }}</summary>
+      <div class="header-ai-detail" role="status">
+        <strong>{{ aiStatusLabel() }}</strong>
+        <p>Analisis deterministik tetap berjalan. Strategi wajib AI menunggu (WAIT) untuk entry baru; strategi opsional AI menggunakan analisis deterministik tanpa dukungan AI.</p>
+        @if (aiStatus()?.recovery; as recovery) {
+          <p>{{ recovery.reasonCode === 'DAILY_QUOTA' ? 'Batas penggunaan AI tercapai.' : recovery.state === 'AUTH_ERROR' ? 'Konfigurasi akses AI perlu diperiksa pengelola.' : recovery.state === 'OPEN' || recovery.state === 'HALF_OPEN' ? 'Layanan AI sedang terganggu; pemulihan dicoba otomatis saat memenuhi syarat.' : 'Status berdasarkan respons berita yang telah divalidasi.' }}</p>
+          <p>Data AI: {{ recovery.dataFreshness === 'FRESH' ? 'Terkini' : recovery.dataFreshness === 'STALE' ? 'Kedaluwarsa' : 'Belum tersedia' }}</p>
+          <p>Berhasil terakhir: {{ recovery.lastSuccess ? (recovery.lastSuccess | date:'short') : 'Belum ada' }}</p>
+          <p>Gangguan terakhir: {{ recovery.lastFailure ? (recovery.lastFailure | date:'short') : 'Belum ada' }}</p>
+          <p>Pemulihan paling awal: {{ recovery.nextEligibleRecoveryTime ? (recovery.nextEligibleRecoveryTime | date:'short') : 'Menunggu pekerjaan berita yang layak' }}. Pemulihan memerlukan berita baru dan kuota tersedia.</p>
+        }
+      </div>
+    </details>
     </header>
 
-    <div class="status-strip" aria-label="Application status">
+    <div data-tour-id="connection" class="status-strip" aria-label="Application status">
       <div class="status-strip-inner">
         <div class="status-item backend-status"
              [class.ok]="backendState() === 'up'"
@@ -184,12 +202,12 @@
 
     <div class="sticky-controls-inner">
     
-    <section class="ticker-grid">
+    <section class="ticker-grid" data-tour-id="symbols">
       @for (symbol of symbols; track symbol) {
         @let ticker = tickers()[symbol];
         <button
           type="button"
-          class="ticker-card"
+          class="ticker-card" [attr.data-tour-id]="symbol === 'BTCUSDT' ? 'ticker' : null"
           [class.active]="selectedSymbol() === symbol"
           (click)="selectSymbol(symbol)">
           <div class="ticker-head">
@@ -307,6 +325,22 @@
   }
 
   <main>
+    @if (activeSection() === 'tutorial') {
+      <section class="panel tutorial-center" aria-labelledby="tutorial-heading">
+        <p class="eyebrow">TUTORIAL</p>
+        <h1 id="tutorial-heading">Tutorial Center</h1>
+        <p>Pelajari aplikasi langsung pada tampilan aslinya, langkah demi langkah.</p>
+        <article>
+          <h2>Mengenal Dashboard</h2>
+          <p>10 langkah · Dashboard, koneksi market, berita, dan navigasi aplikasi.</p>
+          <p role="status">Status sesi: {{ tutorialStatus() }}</p>
+          <button type="button" data-tutorial-start (click)="startDashboardTutorial()">{{ tutorialStatus() === 'Belum dimulai' ? 'Mulai tutorial' : 'Ulangi tutorial' }}</button>
+        </article>
+        @for (module of upcomingTutorials; track module) {
+          <article><h2>{{ module }}</h2><p>Segera tersedia</p></article>
+        }
+      </section>
+    }
     @if (activeSection() === 'paper-risk') {
       <app-paper-risk />
     }
@@ -873,137 +907,46 @@
           <div class="panel-header compact">
             <div>
               <p class="eyebrow">PREDICTION MARKET</p>
-              <h3>Polymarket signal</h3>
+              <h3>Manifold context</h3>
             </div>
-            @if (polymarketIntelligence()) {
+            @if (manifoldIntelligence()) {
               <span
                 class="prediction-bias"
-                [class.positive]="polymarketIntelligence()!.bias === 'BULLISH'"
-                [class.negative]="polymarketIntelligence()!.bias === 'BEARISH'">
-                {{ polymarketIntelligence()!.bias }}
+                [class.positive]="manifoldIntelligence()!.bias === 'BULLISH'"
+                [class.negative]="manifoldIntelligence()!.bias === 'BEARISH'">
+                {{ manifoldIntelligence()!.bias }}
               </span>
             }
           </div>
 
-          @if (polymarketIntelligence()) {
+          @if (manifoldIntelligence()) {
             <div class="prediction-market-grid">
               <div>
                 <span>Confidence</span>
-                <strong>{{ polymarketIntelligence()!.confidence }}%</strong>
+                <strong>{{ manifoldIntelligence()!.confidence }}%</strong>
               </div>
               <div>
                 <span>Importance</span>
-                <strong>{{ polymarketIntelligence()!.importance }}%</strong>
+                <strong>{{ manifoldIntelligence()!.importance }}%</strong>
               </div>
               <div>
                 <span>Markets</span>
-                <strong>{{ polymarketIntelligence()!.marketCount }}</strong>
+                <strong>{{ manifoldIntelligence()!.marketCount }}</strong>
               </div>
               <div>
-                <span>Avg 24h Δ</span>
-                <strong
-                  [class.positive]="polymarketIntelligence()!.averageProbabilityChange > 0"
-                  [class.negative]="polymarketIntelligence()!.averageProbabilityChange < 0">
-                  {{ (polymarketIntelligence()!.averageProbabilityChange * 100) | number:'1.1-2' }}%
-                </strong>
+                <span>24h probability change</span>
+                <strong>Unavailable</strong>
               </div>
             </div>
 
-            @if (polymarketIntelligence()!.topEvent) {
+            @if (manifoldIntelligence()!.topEvent) {
               <div class="prediction-top-event">
                 <span>Top event</span>
-                <strong>{{ polymarketIntelligence()!.topEvent }}</strong>
+                <strong>{{ manifoldIntelligence()!.topEvent }}</strong>
               </div>
             }
 
-            <section class="polymarket-ai-layer">
-              <div class="polymarket-ai-head">
-                <div>
-                  <span>AI INTERPRETATION</span>
-                  <strong>Analisis prediction market</strong>
-                </div>
-                <button
-                  type="button"
-                  [disabled]="aiPolymarketRunning() || aiStatus()?.state === 'DISABLED' || aiStatus()?.state === 'MISSING_API_KEY'"
-                  (click)="runAiPolymarketIntelligence()">
-                  {{ aiPolymarketRunning() ? 'Menganalisis…' : (aiPolymarketIntelligence()?.analysisState === 'ANALYZED' ? 'Analisa ulang' : 'Analisa dengan AI') }}
-                </button>
-              </div>
 
-              @if (aiPolymarketIntelligence()) {
-                <div class="polymarket-ai-summary">
-                  <div class="polymarket-ai-metrics">
-                    <div>
-                      <span>State</span>
-                      <strong>{{ aiPolymarketIntelligence()!.analysisState }}</strong>
-                    </div>
-                    <div>
-                      <span>Direction</span>
-                      <strong
-                        [class.positive]="aiPolymarketIntelligence()!.direction === 'BULLISH'"
-                        [class.negative]="aiPolymarketIntelligence()!.direction === 'BEARISH'">
-                        {{ aiPolymarketIntelligence()!.direction }}
-                      </strong>
-                    </div>
-                    <div>
-                      <span>Materiality</span>
-                      <strong>{{ aiPolymarketIntelligence()!.materialityScore }}/100</strong>
-                    </div>
-                    <div>
-                      <span>AI confidence</span>
-                      <strong>{{ aiPolymarketIntelligence()!.confidence }}%</strong>
-                    </div>
-                  </div>
-
-                  <p>{{ aiPolymarketIntelligence()!.summary }}</p>
-
-                  @if (aiPolymarketIntelligence()!.reason) {
-                    <small class="polymarket-ai-reason">
-                      {{ aiPolymarketIntelligence()!.reason }}
-                    </small>
-                  }
-
-                  @if (aiPolymarketIntelligence()!.catalysts.length || aiPolymarketIntelligence()!.risks.length || aiPolymarketIntelligence()!.contradictions.length) {
-                    <div class="polymarket-ai-factors">
-                      @if (aiPolymarketIntelligence()!.catalysts.length) {
-                        <div>
-                          <span>Catalyst</span>
-                          @for (item of aiPolymarketIntelligence()!.catalysts; track item) {
-                            <small>+ {{ item }}</small>
-                          }
-                        </div>
-                      }
-                      @if (aiPolymarketIntelligence()!.risks.length) {
-                        <div>
-                          <span>Risk</span>
-                          @for (item of aiPolymarketIntelligence()!.risks; track item) {
-                            <small>• {{ item }}</small>
-                          }
-                        </div>
-                      }
-                      @if (aiPolymarketIntelligence()!.contradictions.length) {
-                        <div>
-                          <span>Contradiction</span>
-                          @for (item of aiPolymarketIntelligence()!.contradictions; track item) {
-                            <small>• {{ item }}</small>
-                          }
-                        </div>
-                      }
-                    </div>
-                  }
-
-                  <div class="polymarket-ai-meta">
-                    {{ aiPolymarketIntelligence()!.model }}
-                    · {{ aiPolymarketIntelligence()!.horizon }}
-                    · {{ aiPolymarketIntelligence()!.analyzedAt | date:'HH:mm:ss' }}
-                  </div>
-                </div>
-              } @else {
-                <div class="polymarket-ai-empty">
-                  Deterministic forecast signal tetap aktif. AI hanya dipanggil bila material atau saat Anda meminta analisa manual.
-                </div>
-              }
-            </section>
           } @else {
             <div class="empty-usage">Menunggu data prediction market.</div>
           }
@@ -1114,11 +1057,13 @@
             }
           </div>
 
-          <div class="news-summary">
+          <div class="news-summary" data-tour-id="sentiment" [attr.aria-busy]="sentimentLoading()">
+            @if (sentimentLoading()) { <p role="status">Memuat sentimen berita…</p> } @else if (!newsSentiment()) { <p role="status">Sentimen berita belum tersedia.</p> } @else {
             <div><span>Articles</span><strong>{{ newsSentiment()?.articleCount ?? 0 }}</strong></div>
             <div><span>Positive</span><strong class="positive">{{ newsSentiment()?.positiveCount ?? 0 }}</strong></div>
             <div><span>Neutral</span><strong>{{ newsSentiment()?.neutralCount ?? 0 }}</strong></div>
             <div><span>Negative</span><strong class="negative">{{ newsSentiment()?.negativeCount ?? 0 }}</strong></div>
+            }
           </div>
 
           <section class="news-ai-intelligence">
@@ -1130,6 +1075,7 @@
               <button
                 type="button"
                 [disabled]="aiNewsIntelligenceRunning() || !news().length"
+                data-tour-id="news-ai"
                 (click)="runAiNewsIntelligence()">
                 {{ aiNewsIntelligenceRunning() ? 'Menganalisis…' : (aiNewsIntelligence() ? 'Analisis ulang' : 'Analisis dengan AI') }}
               </button>
@@ -1190,12 +1136,25 @@
             }
           </section>
 
-          <div class="headline-list">
+          <div class="headline-list" data-tour-id="headlines" [attr.aria-busy]="newsLoading()">
+            @if (newsLoading()) { <p role="status">Memuat berita RSS…</p> } @else if (newsFailed()) { <p role="status">Berita gagal dimuat. Coba kembali nanti.</p> } @else {
             @for (article of news().slice(0, 5); track article.id) {
-              <div class="headline">
-                <div>
-                  <strong>{{ article.title }}</strong>
-                  <span>{{ article.source }} · {{ article.publishedAt | date:'HH:mm' }}</span>
+              <article class="headline news-card" data-tour-id="news-article">
+                <div class="news-card-content">
+                  <div class="news-card-meta">
+                    <span class="news-source">{{ newsSourceLabel(article.source) }}</span>
+                    <time [attr.datetime]="article.publishedAt">{{ article.publishedAt | date:'dd MMM yyyy, HH:mm' }}</time>
+                  </div>
+                  <strong class="news-title">{{ article.title }}</strong>
+                  @if (article.summary) {
+                    <p class="news-excerpt">{{ article.summary }}</p>
+                  }
+                  @if (safeNewsUrl(article.url); as articleUrl) {
+                    <a class="news-article-link" [href]="articleUrl" target="_blank" rel="noopener noreferrer"
+                       [attr.aria-label]="'Baca artikel: ' + article.title">Baca artikel <span aria-hidden="true">↗</span></a>
+                  } @else {
+                    <span class="news-link-unavailable">Link tidak tersedia</span>
+                  }
                 </div>
                 <div class="headline-scores">
                   <span class="relevance-score">
@@ -1205,9 +1164,10 @@
                     S {{ article.sentimentScore | number:'1.2-2' }}
                   </span>
                 </div>
-              </div>
+              </article>
             } @empty {
-              <div class="empty-news">No configured news feed has produced articles yet.</div>
+              <div class="empty-news">Belum ada berita untuk aset ini.</div>
+            }
             }
           </div>
         </article>
@@ -1261,7 +1221,7 @@
               @if (aiStatus()) {
                 <div>
                   <span>Engine</span>
-                  <strong>{{ aiStatus()!.state }}</strong>
+                  <strong>{{ aiStatusLabel() }}</strong>
                 </div>
                 <div>
                   <span>Model</span>
@@ -1461,25 +1421,7 @@
               [class.warn]="aiStatus()?.state === 'MISSING_API_KEY' || aiStatus()?.state === 'CONFIGURED_UNVERIFIED' || aiStatus()?.state === 'RATE_LIMITED' || aiStatus()?.state === 'MOCK'"
               [class.error]="aiStatus()?.state === 'AUTH_ERROR' || aiStatus()?.state === 'ERROR'"
               [class.disabled]="aiStatus()?.state === 'DISABLED'">
-              @if (!aiStatus()) {
-                CHECKING
-              } @else if (aiStatus()!.state === 'READY') {
-                LIVE
-              } @else if (aiStatus()!.state === 'MOCK') {
-                MOCK MODE
-              } @else if (aiStatus()!.state === 'MISSING_API_KEY') {
-                API KEY EMPTY
-              } @else if (aiStatus()!.state === 'CONFIGURED_UNVERIFIED') {
-                NOT VERIFIED
-              } @else if (aiStatus()!.state === 'AUTH_ERROR') {
-                AUTH ERROR
-              } @else if (aiStatus()!.state === 'RATE_LIMITED') {
-                RATE LIMITED
-              } @else if (aiStatus()!.state === 'DISABLED') {
-                DISABLED
-              } @else {
-                ERROR
-              }
+              {{ aiStatusLabel() }}
             </span>
           </div>
 
@@ -1568,7 +1510,7 @@
               <h3>Credit & biaya penggunaan AI</h3>
             </div>
             <span class="usage-live" [class.warn]="aiStatus()?.state === 'MOCK'">
-              {{ aiStatus()?.state === 'MOCK' ? 'NO PAID CALLS' : (aiStatus()?.state ?? 'CHECKING') }}
+              {{ aiStatus()?.state === 'MOCK' ? 'NO PAID CALLS' : aiStatusLabel() }}
             </span>
           </div>
 
@@ -1683,3 +1625,7 @@
     </section>
   </main>
 </div>
+
+@if (tutorialActive()) {
+  <app-guided-tour (prepare)="prepareTutorialStep($event)" (finish)="finishTutorial($event)" />
+}

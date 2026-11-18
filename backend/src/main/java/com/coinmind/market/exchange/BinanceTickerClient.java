@@ -11,7 +11,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient;
-import reactor.util.retry.Retry;
+import com.coinmind.market.service.MarketDataValidity;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -45,16 +45,12 @@ public class BinanceTickerClient {
         URI uri = URI.create(buildCombinedStreamUrl());
         log.info("Connecting to Binance market stream: {}", uri);
 
-        webSocketClient.execute(uri, session ->
+        MarketStreamRecovery.reconnecting(webSocketClient.execute(uri, session ->
                         session.receive()
                                 .timeout(Duration.ofSeconds(30))
                                 .doOnNext(message -> handlePayload(message.getPayloadAsText()))
                                 .then()
-                )
-                .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(2))
-                        .maxBackoff(Duration.ofSeconds(30))
-                        .doBeforeRetry(signal ->
-                                log.warn("Binance WebSocket disconnected. Reconnecting. attempt={}, cause={}", signal.totalRetries() + 1, signal.failure().toString())))
+                ))
                 .subscribe(
                         ignored -> { },
                         error -> log.error("Binance WebSocket terminated unexpectedly", error)
@@ -89,13 +85,14 @@ public class BinanceTickerClient {
                     Instant.ofEpochMilli(data.path("E").asLong())
             );
 
-            tickerService.publish(snapshot);
+            if (MarketDataValidity.valid(snapshot, Instant.now()) && properties.symbols().contains(snapshot.symbol()))
+                tickerService.publish(snapshot);
         } catch (Exception ex) {
             log.warn("Unable to parse Binance ticker payload", ex);
         }
     }
 
     private BigDecimal decimal(JsonNode node, String field) {
-        return new BigDecimal(node.path(field).asText("0"));
+        return new BigDecimal(node.path(field).asText());
     }
 }

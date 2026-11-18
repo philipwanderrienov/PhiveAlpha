@@ -7,7 +7,6 @@ import {
   AiDecisionReview,
   AiNewsIntelligence,
   AiBenchmarkConfig,
-  AiPolymarketIntelligence,
   AiAnalysisHistoryItem,
   AiEngineStatus,
   AiEvaluationSummary,
@@ -21,7 +20,7 @@ import {
   MarketFeedHealth,
   NewsArticle,
   NewsSentimentSummary,
-  PolymarketIntelligence,
+  ManifoldIntelligence,
   OrderBookSnapshot,
   TechnicalIndicators,
   TickerSnapshot,
@@ -75,24 +74,15 @@ export class MarketApiService {
     );
   }
 
-  getPolymarketIntelligence(symbol: string): Observable<PolymarketIntelligence> {
-    return this.http.get<PolymarketIntelligence>(
-      `/api/v1/polymarket/${symbol}`
+  getManifoldIntelligence(symbol: string): Observable<ManifoldIntelligence> {
+    return this.http.get<ManifoldIntelligence>(
+      `/api/v1/manifold/${symbol}`
     );
   }
 
-  getAiPolymarketIntelligence(symbol: string): Observable<AiPolymarketIntelligence> {
-    return this.http.get<AiPolymarketIntelligence>(
-      `/api/v1/ai/polymarket-intelligence/${symbol}`
-    );
-  }
 
-  analyzePolymarketIntelligence(symbol: string): Observable<AiPolymarketIntelligence> {
-    return this.http.post<AiPolymarketIntelligence>(
-      `/api/v1/ai/polymarket-intelligence/${symbol}`,
-      {}
-    );
-  }
+
+
 
   getMarketContext(symbol: string, interval: string): Observable<MarketContext> {
     return this.http.get<MarketContext>(

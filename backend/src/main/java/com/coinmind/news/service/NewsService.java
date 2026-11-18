@@ -74,7 +74,7 @@ public class NewsService {
             String summary,
             Instant publishedAt
     ) {
-        if (id == null || id.isBlank() || title == null || title.isBlank()) {
+        if (publishedAt == null || publishedAt.isAfter(Instant.now()) || id == null || id.isBlank() || title == null || title.isBlank()) {
             return;
         }
 
@@ -86,7 +86,7 @@ public class NewsService {
                 source == null ? "unknown" : source,
                 url,
                 summary,
-                publishedAt == null ? Instant.now() : publishedAt,
+                publishedAt,
                 detectSymbols(title + " " + (summary == null ? "" : summary)),
                 sentimentService.score(title, summary),
                 calculateRelevance(title, summary, source)
@@ -138,6 +138,23 @@ public class NewsService {
                                 .thenComparing(NewsArticle::publishedAt, Comparator.reverseOrder())
                 )
                 .limit(Math.max(1, Math.min(limit, 100)))
+                .toList();
+    }
+
+    /** Filter all symbol candidates before ranking and limiting the Gemini batch. */
+    public synchronized List<NewsArticle> recentForSymbol(
+            String symbol, int limit, java.util.function.Predicate<NewsArticle> eligibility
+    ) {
+        String normalized = normalizeBaseSymbol(symbol);
+        Set<String> ids = new java.util.HashSet<>();
+        return articles.values().stream()
+                .filter(eligibility)
+                .filter(article -> article.symbols() != null && article.symbols().contains(normalized))
+                .sorted(Comparator.comparing(NewsArticle::relevanceScore,
+                                Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(NewsArticle::publishedAt, Comparator.reverseOrder()))
+                .filter(article -> ids.add(article.id()))
+                .limit(Math.max(0, Math.min(limit, 5)))
                 .toList();
     }
 

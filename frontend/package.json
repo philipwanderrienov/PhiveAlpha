@@ -5,7 +5,10 @@
   "scripts": {
     "start": "ng serve",
     "build": "ng build",
-    "test": "ng test"
+    "test": "ng test",
+    "test:ai-status": "node test-ai-status.mjs",
+    "test:news": "node test-news.mjs",
+    "test:tutorial": "node test-tutorial.mjs"
   },
   "dependencies": {
     "@angular/animations": "^22.0.0",

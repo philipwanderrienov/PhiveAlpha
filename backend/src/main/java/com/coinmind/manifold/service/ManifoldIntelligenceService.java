@@ -1,7 +1,7 @@
-package com.coinmind.polymarket.service;
+package com.coinmind.manifold.service;
 
-import com.coinmind.polymarket.model.PolymarketIntelligence;
-import com.coinmind.polymarket.model.PredictionSourceHealth;
+import com.coinmind.manifold.model.ManifoldIntelligence;
+import com.coinmind.manifold.model.PredictionSourceHealth;
 import io.netty.channel.ChannelOption;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -25,24 +25,24 @@ import reactor.netty.http.client.HttpClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/** Legacy type name retained temporarily for downstream compatibility.
+/** Manifold public forecasting context.
  * Manifold is the ONLY network source; no Gamma or CLOB calls exist.
  * Probabilities are contextual and NEVER translated into trade direction.
  */
 @Service
-public class PolymarketIntelligenceService {
-    private static final Logger log = LoggerFactory.getLogger(PolymarketIntelligenceService.class);
+public class ManifoldIntelligenceService {
+    private static final Logger log = LoggerFactory.getLogger(ManifoldIntelligenceService.class);
     private static final Duration FRESHNESS = Duration.ofMinutes(10);
     private final WebClient manifoldClient;
     private final ObjectMapper objectMapper;
     private final Duration requestTimeout;
     private final Duration failureCooldown;
-    private final Map<String, PolymarketIntelligence> latest = new ConcurrentHashMap<>();
+    private final Map<String, ManifoldIntelligence> latest = new ConcurrentHashMap<>();
     private final Map<String, Instant> cooldown = new ConcurrentHashMap<>();
-    private volatile PredictionSourceHealth.SourceStatus health =
-            new PredictionSourceHealth.SourceStatus("MANIFOLD", "UNKNOWN", "Not checked yet", null, 0);
+    private static final List<String> SYMBOLS = List.of("BTCUSDT", "ETHUSDT", "SOLUSDT");
+    private final Map<String, PredictionSourceHealth.SourceStatus> health = new ConcurrentHashMap<>();
 
-    public PolymarketIntelligenceService(
+    public ManifoldIntelligenceService(
             ObjectMapper objectMapper,
             @Value("${coinmind.manifold.base-url:https://api.manifold.markets}") String baseUrl,
             @Value("${coinmind.manifold.connect-timeout-ms:5000}") int connectTimeoutMs,
@@ -58,7 +58,7 @@ public class PolymarketIntelligenceService {
                 .clientConnector(new ReactorClientHttpConnector(client)).build();
     }
 
-    public Mono<PolymarketIntelligence> refresh(String symbol) {
+    public Mono<ManifoldIntelligence> refresh(String symbol) {
         String normalized = normalize(symbol);
         Instant now = Instant.now();
         if (cooldown.getOrDefault(normalized, Instant.EPOCH).isAfter(now)) {
@@ -83,31 +83,32 @@ public class PolymarketIntelligenceService {
                 .doOnNext(result -> {
                     latest.put(normalized, result);
                     cooldown.remove(normalized);
-                    health = new PredictionSourceHealth.SourceStatus(
+                    health.put(normalized, new PredictionSourceHealth.SourceStatus(
                             "MANIFOLD", result.marketCount() > 0 ? "UP" : "EMPTY",
-                            "Public search responded", Instant.now(), result.marketCount());
+                            "Public search responded", Instant.now(), result.marketCount(), normalized));
                 })
                 .onErrorResume(error -> {
                     cooldown.put(normalized, Instant.now().plus(failureCooldown));
-                    health = new PredictionSourceHealth.SourceStatus(
+                    health.put(normalized, new PredictionSourceHealth.SourceStatus(
                             "MANIFOLD", "UNAVAILABLE", error.getClass().getSimpleName(),
-                            Instant.now(), 0);
+                            Instant.now(), 0, normalized));
                     log.warn("Manifold unavailable for {}: {}", normalized, error.toString());
                     return Mono.just(fallback(normalized));
                 });
     }
 
-    private PolymarketIntelligence parse(String symbol, String body) {
+    private ManifoldIntelligence parse(String symbol, String body) {
         JsonNode root;
         try {
             root = objectMapper.readTree(body);
         } catch (Exception ex) {
             throw new IllegalArgumentException("Invalid Manifold JSON", ex);
         }
-        List<PolymarketIntelligence.MarketSignal> signals = new ArrayList<>();
+        List<ManifoldIntelligence.MarketSignal> signals = new ArrayList<>();
         long now = Instant.now().toEpochMilli();
         long cutoff = Instant.now().plus(Duration.ofDays(35)).toEpochMilli();
-        if (root.isArray()) for (JsonNode market : root) {
+        if (!root.isArray()) throw new IllegalArgumentException("Expected Manifold array");
+        for (JsonNode market : root) {
             if (!"BINARY".equals(market.path("outcomeType").asText("")) ||
                     market.path("isResolved").asBoolean(false)) continue;
             JsonNode end = market.path("closeTime");
@@ -128,13 +129,13 @@ public class PolymarketIntelligenceService {
             BigDecimal volume = decimal(market.path("volume24Hours"));
             BigDecimal liquidity = decimal(market.path("totalLiquidity"));
             int relevance = 35 + (volume.signum() > 0 ? 20 : 0) + (liquidity.signum() > 0 ? 10 : 0);
-            signals.add(new PolymarketIntelligence.MarketSignal(
+            signals.add(new ManifoldIntelligence.MarketSignal(
                     "manifold", market.path("id").asText(""), question, probability,
                     BigDecimal.ZERO, liquidity, volume, "NEUTRAL", relevance));
         }
-        signals.sort(Comparator.comparing(PolymarketIntelligence.MarketSignal::volume24h).reversed());
-        List<PolymarketIntelligence.MarketSignal> top = signals.stream().limit(8).toList();
-        return new PolymarketIntelligence(symbol, "MANIFOLD", "NEUTRAL",
+        signals.sort(Comparator.comparing(ManifoldIntelligence.MarketSignal::volume24h).reversed());
+        List<ManifoldIntelligence.MarketSignal> top = signals.stream().limit(8).toList();
+        return new ManifoldIntelligence(symbol, "MANIFOLD", "NEUTRAL",
                 top.isEmpty() ? 0 : 35, top.isEmpty() ? 0 : 40, top.size(),
                 BigDecimal.ZERO, top.isEmpty() ? "" : top.get(0).question(),
                 top, Instant.now());
@@ -144,10 +145,9 @@ public class PolymarketIntelligenceService {
         return node.isNumber() ? node.decimalValue() : BigDecimal.ZERO;
     }
 
-    private PolymarketIntelligence fallback(String symbol) {
-        PolymarketIntelligence cached = latestFresh(symbol);
-        if (cached != null) return cached;
-        return new PolymarketIntelligence(symbol, "NONE", "NEUTRAL", 0, 0, 0,
+    private ManifoldIntelligence fallback(String symbol) {
+        // Retain cache for recovery, but never present it as a successful fallback.
+        return new ManifoldIntelligence(symbol, "NONE", "NEUTRAL", 0, 0, 0,
                 BigDecimal.ZERO, "", List.of(), Instant.now());
     }
 
@@ -161,13 +161,19 @@ public class PolymarketIntelligenceService {
         };
     }
 
-    public PolymarketIntelligence latestFresh(String symbol) {
-        PolymarketIntelligence found = latest.get(normalize(symbol));
-        return found != null && found.updatedAt().plus(FRESHNESS).isAfter(Instant.now()) ? found : null;
+    public ManifoldIntelligence latestFresh(String symbol) {
+        ManifoldIntelligence found = latest.get(normalize(symbol));
+        return found != null && List.of("UP", "EMPTY").contains(health.getOrDefault(normalize(symbol), unknown(normalize(symbol))).state()) && found.updatedAt().plus(FRESHNESS).isAfter(Instant.now()) ? found : null;
     }
 
     public PredictionSourceHealth sourceHealth() {
-        return new PredictionSourceHealth(List.of(health), Instant.now());
+        var snapshot = new java.util.LinkedHashMap<String, PredictionSourceHealth.SourceStatus>();
+        SYMBOLS.forEach(symbol -> snapshot.put(symbol, health.getOrDefault(symbol, unknown(symbol))));
+        return new PredictionSourceHealth(List.copyOf(snapshot.values()), Instant.now(), snapshot);
+    }
+
+    private PredictionSourceHealth.SourceStatus unknown(String symbol) {
+        return new PredictionSourceHealth.SourceStatus("MANIFOLD", "UNKNOWN", "Not checked yet", null, 0, symbol);
     }
 
     @Scheduled(initialDelay = 15000, fixedDelay = 300000)

@@ -55,10 +55,15 @@ public class MarketContextBuilder {
         TickerSnapshot ticker = tickerService.getLatest(normalizedSymbol)
                 .orElseThrow(() -> new IllegalStateException("Ticker not available"));
 
+        Instant now = Instant.now();
+        if (!com.coinmind.market.service.MarketDataValidity.valid(ticker, now))
+            throw new IllegalStateException("Market data stale or invalid: ticker");
         var candles = historyService.get(normalizedSymbol, normalizedInterval, 500);
         if (candles.size() < 30) {
             throw new IllegalStateException("Not enough candle history");
         }
+
+        com.coinmind.market.service.MarketDataValidity.requireHistory(candles, now);
 
         TechnicalIndicators indicators = indicatorService.calculate(
                 normalizedSymbol,
@@ -69,6 +74,11 @@ public class MarketContextBuilder {
         OrderBookSnapshot orderBook = orderBookService.getLatest(normalizedSymbol)
                 .orElseThrow(() -> new IllegalStateException("Order book not available"));
 
+        if (!com.coinmind.market.service.MarketDataValidity.fresh(orderBook.eventTime(), now))
+            throw new IllegalStateException("Market data stale: order book");
+        if (tradeService.getLatest(normalizedSymbol).filter(t ->
+                com.coinmind.market.service.MarketDataValidity.fresh(t.eventTime(), now)).isEmpty())
+            throw new IllegalStateException("Market data unavailable or stale: trades");
         var micro = tradeService.summarize(
                 normalizedSymbol,
                 orderBook.spread(),

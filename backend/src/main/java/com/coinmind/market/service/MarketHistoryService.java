@@ -28,12 +28,16 @@ public class MarketHistoryService {
 
         historicalCandles.stream()
                 .sorted(Comparator.comparing(Candlestick::openTime))
-                .forEach(candle -> merged.put(candle.openTime(), candle));
+                .forEach(candle -> merged.merge(candle.openTime(), candle, (existing, incoming) ->
+                        existing.eventTime().isAfter(incoming.eventTime()) || (existing.closed() && !incoming.closed())
+                                ? existing : incoming));
 
         // Preserve realtime observations if WebSocket data arrived while REST bootstrap was running.
         candlesBySeries.getOrDefault(key, List.of()).stream()
                 .sorted(Comparator.comparing(Candlestick::openTime))
-                .forEach(candle -> merged.put(candle.openTime(), candle));
+                .forEach(candle -> merged.merge(candle.openTime(), candle, (existing, incoming) ->
+                        existing.eventTime().isAfter(incoming.eventTime()) || (existing.closed() && !incoming.closed())
+                                ? existing : incoming));
 
         List<Candlestick> normalized = merged.values().stream()
                 .sorted(Comparator.comparing(Candlestick::openTime))
@@ -49,6 +53,8 @@ public class MarketHistoryService {
                 candlesBySeries.getOrDefault(key, List.of())
         );
 
+        if (series.stream().anyMatch(existing -> existing.openTime().equals(candle.openTime())
+                && (existing.eventTime().isAfter(candle.eventTime()) || (existing.closed() && !candle.closed())))) return;
         series.removeIf(existing -> existing.openTime().equals(candle.openTime()));
         series.add(candle);
         series.sort(Comparator.comparing(Candlestick::openTime));

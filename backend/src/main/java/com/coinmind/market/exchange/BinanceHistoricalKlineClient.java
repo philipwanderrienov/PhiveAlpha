@@ -28,24 +28,30 @@ public class BinanceHistoricalKlineClient {
     private final ObjectProvider<CandlestickPersistenceService> persistenceService;
     private final WebClient webClient;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public BinanceHistoricalKlineClient(
             MarketProperties properties,
             MarketHistoryService historyService,
             ObjectProvider<CandlestickPersistenceService> persistenceService
     ) {
+        this(properties, historyService, persistenceService, WebClient.builder()
+                .baseUrl(properties.binanceRestBaseUrl()).build());
+    }
+
+    BinanceHistoricalKlineClient(MarketProperties properties, MarketHistoryService historyService,
+            ObjectProvider<CandlestickPersistenceService> persistenceService, WebClient webClient) {
         this.properties = properties;
         this.historyService = historyService;
         this.persistenceService = persistenceService;
-        this.webClient = WebClient.builder()
-                .baseUrl(properties.binanceRestBaseUrl())
-                .build();
+        this.webClient = webClient;
     }
 
+    @org.springframework.scheduling.annotation.Scheduled(initialDelay = 60000, fixedDelay = 60000)
     @EventListener(ApplicationReadyEvent.class)
     public void bootstrap() {
         properties.symbols().forEach(symbol ->
                 properties.intervals().forEach(interval ->
-                        loadSeries(symbol, interval)
+                        (historyFresh(symbol, interval) ? reactor.core.publisher.Mono.<List<Candlestick>>empty() : loadSeries(symbol, interval))
                                 .subscribe(
                                         candles -> {
                                             historyService.mergeBootstrap(symbol, interval, candles);
@@ -78,7 +84,16 @@ public class BinanceHistoricalKlineClient {
         );
     }
 
-    private reactor.core.publisher.Mono<List<Candlestick>> loadSeries(
+    private boolean historyFresh(String symbol, String interval) {
+        try {
+            com.coinmind.market.service.MarketDataValidity.requireHistory(historyService.get(symbol, interval, 500), Instant.now());
+            return true;
+        } catch (IllegalStateException invalid) {
+            return false;
+        }
+    }
+
+    reactor.core.publisher.Mono<List<Candlestick>> loadSeries(
             String symbol,
             String interval
     ) {
@@ -91,6 +106,7 @@ public class BinanceHistoricalKlineClient {
                         .build())
                 .retrieve()
                 .bodyToMono(JsonNode.class)
+                .timeout(java.time.Duration.ofSeconds(10))
                 .map(root -> parse(root, symbol, interval));
     }
 
@@ -103,12 +119,12 @@ public class BinanceHistoricalKlineClient {
         Instant now = Instant.now();
 
         if (!root.isArray()) {
-            return candles;
+            throw new IllegalArgumentException("Invalid Binance candle response");
         }
 
         for (JsonNode row : root) {
             if (!row.isArray() || row.size() < 9) {
-                continue;
+                throw new IllegalArgumentException("Incomplete Binance candle row");
             }
 
             Instant closeTime = Instant.ofEpochMilli(row.get(6).asLong());
@@ -130,6 +146,7 @@ public class BinanceHistoricalKlineClient {
             ));
         }
 
+        com.coinmind.market.service.MarketDataValidity.requireHistory(candles, now);
         return candles;
     }
 

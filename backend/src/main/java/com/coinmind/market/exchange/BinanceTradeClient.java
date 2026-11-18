@@ -11,7 +11,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient;
-import reactor.util.retry.Retry;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -45,16 +44,12 @@ public class BinanceTradeClient {
         URI uri = URI.create(buildCombinedStreamUrl());
         log.info("Connecting to Binance aggTrade streams. symbols={}", properties.symbols());
 
-        webSocketClient.execute(uri, session ->
+        MarketStreamRecovery.reconnecting(webSocketClient.execute(uri, session ->
                         session.receive()
                                 .timeout(Duration.ofSeconds(30))
                                 .doOnNext(message -> handlePayload(message.getPayloadAsText()))
                                 .then()
-                )
-                .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(2))
-                        .maxBackoff(Duration.ofSeconds(30))
-                        .doBeforeRetry(signal ->
-                                log.warn("Binance aggTrade WebSocket stale/disconnected. Reconnecting. attempt={}, cause={}", signal.totalRetries() + 1, signal.failure().toString())))
+                ))
                 .subscribe(
                         ignored -> { },
                         error -> log.error("Binance aggTrade WebSocket terminated unexpectedly", error)
@@ -76,6 +71,10 @@ public class BinanceTradeClient {
 
             BigDecimal price = decimal(data, "p");
             BigDecimal quantity = decimal(data, "q");
+            if (price.signum() <= 0 || quantity.signum() <= 0 || !data.has("m") || !data.has("a")
+                    || !properties.symbols().contains(data.path("s").asText())
+                    || !com.coinmind.market.service.MarketDataValidity.fresh(
+                            Instant.ofEpochMilli(data.path("E").asLong()), Instant.now())) return;
             boolean buyerIsMaker = data.path("m").asBoolean();
 
             tradeService.publish(new TradeSnapshot(
@@ -95,6 +94,6 @@ public class BinanceTradeClient {
     }
 
     private BigDecimal decimal(JsonNode node, String field) {
-        return new BigDecimal(node.path(field).asText("0"));
+        return new BigDecimal(node.path(field).asText());
     }
 }

@@ -11,8 +11,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /** Internal opt-in storage of realized-only paper equity points. Not a live feed. */
+// Must remain subclassable for Spring repository exception-translation proxies.
 @Repository
-public final class FuturesPaperEquityArchive {
+public class FuturesPaperEquityArchive {
     private final DatabaseClient db;
     private final boolean enabled;
 

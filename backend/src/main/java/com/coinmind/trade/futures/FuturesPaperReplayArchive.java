@@ -13,8 +13,9 @@ import reactor.core.publisher.Mono;
  * Opt-in PostgreSQL archive for trusted server-generated replay summary snapshots.
  * Schema is installed separately; no public write routes. All rows are OFFLINE_ONLY.
  */
+// Must remain subclassable for Spring repository exception-translation proxies.
 @Repository
-public final class FuturesPaperReplayArchive {
+public class FuturesPaperReplayArchive {
     private final DatabaseClient db;
     private final boolean enabled;
 

@@ -17,6 +17,33 @@ class TradeSetupServiceTest {
     private final TradeSetupService service = new TradeSetupService(null, null, null, null);
 
     @Test
+    void manifoldContextCannotChangeTechnicalConfidenceRiskOrWarnings() throws Exception {
+        var builder = org.mockito.Mockito.mock(com.coinmind.ai.service.MarketContextBuilder.class);
+        var bullish = context("72", "BULLISH", "55", "62", "1.60", "1.30", "MEDIUM");
+        org.mockito.Mockito.when(builder.build(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(bullish);
+        var engine = new TradeSetupService(builder, null, null, null);
+        var method = TradeSetupService.class.getDeclaredMethod("build", String.class, String.class,
+                com.coinmind.market.model.MarketActivityProfile.class, com.coinmind.ai.model.AiNewsIntelligence.class,
+                com.coinmind.manifold.model.ManifoldIntelligence.class);
+        method.setAccessible(true);
+        var activity = new com.coinmind.market.model.MarketActivityProfile("BTCUSDT", "UTC", 1, 0, "MEDIUM", BigDecimal.valueOf(50), List.of(), List.of(), Instant.now());
+        var baseline = (com.coinmind.trade.model.TradeSetup) method.invoke(engine, "BTCUSDT", "1h", activity, null, null);
+        var prediction = new com.coinmind.manifold.model.ManifoldIntelligence("BTCUSDT", "MANIFOLD", "NEUTRAL", 35, 40, 1, BigDecimal.ZERO, "Bitcoin question", List.of(), Instant.now());
+        var actual = (com.coinmind.trade.model.TradeSetup) method.invoke(engine, "BTCUSDT", "1h", activity, null, prediction);
+        var fallback = new com.coinmind.manifold.model.ManifoldIntelligence("BTCUSDT", "NONE", "NEUTRAL", 0, 0, 0, BigDecimal.ZERO, "", List.of(), Instant.now());
+        var degraded = (com.coinmind.trade.model.TradeSetup) method.invoke(engine, "BTCUSDT", "1h", activity, null, fallback);
+        assertEquals(baseline.confidence(), degraded.confidence());
+        assertEquals(baseline.reasons(), degraded.reasons());
+        assertEquals(baseline.action(), actual.action());
+        assertEquals(baseline.confidence(), actual.confidence());
+        assertEquals(baseline.warnings(), actual.warnings());
+        assertEquals(baseline.entryLow(), actual.entryLow());
+        assertEquals(baseline.invalidationPrice(), actual.invalidationPrice());
+        assertEquals(baseline.target1(), actual.target1());
+        assertEquals(baseline.riskReward1(), actual.riskReward1());
+    }
+
+    @Test
     void createsBuySetupForStrongBullishContext() {
         var setup = service.build(context(
                 "72",
@@ -36,6 +63,20 @@ class TradeSetupServiceTest {
         assertTrue(setup.target2().compareTo(setup.target1()) > 0);
         assertEquals(BigDecimal.valueOf(1.5), setup.riskReward1());
         assertEquals(BigDecimal.valueOf(2.5), setup.riskReward2());
+    }
+
+    @Test
+    void requiredAiWaitsAndOptionalAiDisclosesDeterministicOnly() throws Exception {
+        var context = context("72", "BULLISH", "55", "62", "1.60", "1.30", "MEDIUM");
+        var optional = service.build(context);
+        assertEquals("BUY", optional.action());
+        assertTrue(optional.warnings().stream().anyMatch(w -> w.contains("hanya memakai analisis deterministik")));
+        var field = TradeSetupService.class.getDeclaredField("aiRequiredForEntry");
+        field.setAccessible(true); field.setBoolean(service, true);
+        var required = service.build(context);
+        assertEquals("WAIT", required.action());
+        assertNull(required.entryLow()); assertNull(required.target1());
+        assertTrue(required.warnings().stream().anyMatch(w -> w.contains("AI wajib")));
     }
 
     @Test

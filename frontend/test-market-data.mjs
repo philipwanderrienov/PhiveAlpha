@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+const code = ts.transpileModule(readFileSync(new URL('./src/app/core/market-data-validity.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
+const { marketEventFresh } = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+const now = 1000000;
+for (const [time, expected] of [[now,true],[now-30000,true],[now-30001,false],[now+5000,true],[now+5001,false],[NaN,false]]) assert.equal(marketEventFresh(time,now),expected);
+assert.equal(marketEventFresh(now,now+31000),false);
+assert.equal(marketEventFresh(now+31000,now+31000),true);
+console.log('8 market freshness/recovery cases passed');

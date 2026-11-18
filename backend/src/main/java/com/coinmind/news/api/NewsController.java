@@ -18,8 +18,16 @@ public class NewsController {
 
     private final NewsService newsService;
 
-    public NewsController(NewsService newsService) {
+    private final com.coinmind.news.exchange.RssNewsCollector collector;
+
+    public NewsController(NewsService newsService, com.coinmind.news.exchange.RssNewsCollector collector) {
+        this.collector = collector;
         this.newsService = newsService;
+    }
+
+    @GetMapping("/source-health")
+    public com.coinmind.news.exchange.RssNewsCollector.SourceHealth sourceHealth() {
+        return collector.sourceHealth();
     }
 
     @GetMapping

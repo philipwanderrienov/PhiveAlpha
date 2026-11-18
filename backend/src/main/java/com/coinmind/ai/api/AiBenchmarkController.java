@@ -1,8 +1,6 @@
 package com.coinmind.ai.api;
 
 import com.coinmind.ai.config.AiProperties;
-import com.coinmind.ai.model.AiPolymarketBenchmarkResult;
-import com.coinmind.ai.service.AiPolymarketBenchmarkService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,14 +12,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/v1/ai/benchmark")
 public class AiBenchmarkController {
 
-    private final AiPolymarketBenchmarkService benchmarkService;
     private final AiProperties properties;
 
     public AiBenchmarkController(
-            AiPolymarketBenchmarkService benchmarkService,
             AiProperties properties
     ) {
-        this.benchmarkService = benchmarkService;
         this.properties = properties;
     }
 
@@ -35,12 +30,7 @@ public class AiBenchmarkController {
         );
     }
 
-    @PostMapping("/forecast/{symbol}")
-    public Mono<AiPolymarketBenchmarkResult> benchmarkForecast(
-            @PathVariable String symbol
-    ) {
-        return benchmarkService.benchmark(symbol);
-    }
+
 
     public record BenchmarkConfig(
             boolean aiEnabled,

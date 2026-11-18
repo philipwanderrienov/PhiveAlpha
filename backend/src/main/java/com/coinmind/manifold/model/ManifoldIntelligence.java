@@ -1,10 +1,10 @@
-package com.coinmind.polymarket.model;
+package com.coinmind.manifold.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record PolymarketIntelligence(
+public record ManifoldIntelligence(
         String symbol,
         String source,
         String bias,

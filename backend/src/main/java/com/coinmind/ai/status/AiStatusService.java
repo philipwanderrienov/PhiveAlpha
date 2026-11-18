@@ -1,6 +1,7 @@
 package com.coinmind.ai.status;
 
 import com.coinmind.ai.config.AiProperties;
+import com.coinmind.ai.config.GeminiProperties;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -9,17 +10,39 @@ import java.time.Instant;
 public class AiStatusService {
 
     private final AiProperties properties;
+    private final GeminiProperties gemini;
 
     private volatile String runtimeState = null;
     private volatile String runtimeMessage = null;
     private volatile Integer lastHttpStatus = null;
     private volatile Instant lastCheckedAt = null;
 
-    public AiStatusService(AiProperties properties) {
+    public AiStatusService(AiProperties properties, GeminiProperties gemini) {
         this.properties = properties;
+        this.gemini = gemini;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.coinmind.ai.provider.GeminiAiProvider> provider;
+
     public AiEngineStatus current() {
+        if ("gemini".equalsIgnoreCase(properties.provider())) {
+            boolean keyConfigured = gemini.apiKey() != null && !gemini.apiKey().isBlank();
+            String state = !properties.enabled() || !gemini.newsEnabled() ? "DISABLED"
+                    : !keyConfigured ? "MISSING_API_KEY" : "CONFIGURED_UNVERIFIED";
+            java.util.Map<String,Object> recovery = provider != null && provider.getIfAvailable() != null
+                    ? provider.getIfAvailable().recoveryStatus() : java.util.Map.of();
+            if (state.equals("CONFIGURED_UNVERIFIED")) {
+                String circuit = (String) recovery.get("state");
+                state = "AUTH_ERROR".equals(circuit) ? "AUTH_ERROR"
+                        : "DAILY_QUOTA".equals(recovery.get("reasonCode")) ? "RATE_LIMITED"
+                        : "OPEN".equals(circuit) || "HALF_OPEN".equals(circuit) ? "ERROR"
+                        : "FRESH".equals(recovery.get("dataFreshness")) ? "READY" : "CONFIGURED_UNVERIFIED";
+            }
+            return new AiEngineStatus(state, properties.provider(), gemini.model(),
+                    properties.enabled() && gemini.newsEnabled(), keyConfigured,
+                    "Analisis deterministik tetap berjalan. Gemini hanya mendukung klasifikasi berita.", null, null, recovery);
+        }
         boolean keyConfigured = properties.apiKey() != null
                 && !properties.apiKey().isBlank();
 

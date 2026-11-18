@@ -22,6 +22,12 @@ coinmind:
   ai:
     enabled: ${AI_ENABLED:false}
     provider: ${AI_PROVIDER:openai}
+    gemini:
+      news-enabled: ${GEMINI_NEWS_ENABLED:false}
+      model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+      api-key: ${GEMINI_API_KEY:}
+      timeout-ms: ${GEMINI_TIMEOUT_MS:15000}
+      max-calls-per-day: ${GEMINI_MAX_CALLS_PER_DAY:10}
     model: ${AI_MODEL:gpt-6-luna}
     routine-model: ${AI_ROUTINE_MODEL:gpt-6-luna}
     deep-model: ${AI_DEEP_MODEL:gpt-6.1-sol}
@@ -45,11 +51,6 @@ coinmind:
     minimum-automatic-signal-score: ${AI_MIN_AUTOMATIC_SIGNAL_SCORE:45}
     max-automatic-calls-per-hour: ${AI_MAX_AUTOMATIC_CALLS_PER_HOUR:12}
     max-automatic-calls-per-day: ${AI_MAX_AUTOMATIC_CALLS_PER_DAY:60}
-    polymarket-enabled: ${AI_POLYMARKET_ENABLED:true}
-    polymarket-min-probability-change: ${AI_POLYMARKET_MIN_PROBABILITY_CHANGE:0.03}
-    polymarket-min-importance: ${AI_POLYMARKET_MIN_IMPORTANCE:80}
-    polymarket-deep-materiality-score: ${AI_POLYMARKET_DEEP_MATERIALITY_SCORE:75}
-    polymarket-cache-minutes: ${AI_POLYMARKET_CACHE_MINUTES:60}
     trigger-intervals:
       - 15m
       - 1h

@@ -193,7 +193,7 @@ export interface NewsSentimentSummary {
 
 
 export interface MarketFeedStreamHealth {
-  status: 'UP' | 'STALE' | 'STARTING';
+  status: 'UP' | 'STALE' | 'STARTING' | 'UNAVAILABLE';
   lastEventAt: string | null;
   ageSeconds: number | null;
 }
@@ -294,6 +294,7 @@ export interface AiBenchmarkConfig {
 
 
 export interface AiEngineStatus {
+  recovery?: { state: string; reasonCode: string; lastSuccess: string | null; lastFailure: string | null; nextEligibleRecoveryTime: string | null; dataFreshness: string };
   state: 'DISABLED' | 'MISSING_API_KEY' | 'MOCK' | 'CONFIGURED_UNVERIFIED' | 'READY' | 'AUTH_ERROR' | 'RATE_LIMITED' | 'ERROR';
   provider: string;
   model: string;
@@ -439,29 +440,11 @@ export interface AiNewsIntelligence {
 }
 
 
-export interface AiPolymarketIntelligence {
-  symbol: string;
-  analysisState: 'ANALYZED' | 'SKIPPED' | 'UNAVAILABLE' | 'MOCK';
-  direction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
-  importance: number;
-  confidence: number;
-  horizon: 'IMMEDIATE' | 'INTRADAY' | 'MULTIDAY' | 'NONE';
-  summary: string;
-  catalysts: string[];
-  risks: string[];
-  contradictions: string[];
-  materialityScore: number;
-  deterministicBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
-  sourceMarketCount: number;
-  model: string;
-  reason: string;
-  analyzedAt: string;
-}
 
 
-export interface PolymarketIntelligence {
+export interface ManifoldIntelligence {
   symbol: string;
-  source: 'POLYMARKET_GAMMA' | 'POLYMARKET_CLOB' | 'MANIFOLD' | 'NONE';
+  source: 'MANIFOLD' | 'NONE';
   bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
   confidence: number;
   importance: number;

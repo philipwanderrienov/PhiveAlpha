@@ -1,3 +1,5 @@
+> Update 2026-11-12: legacy Polymarket cleanup completed in working tree; earlier migration tasks/descriptions below are historical. Runtime prediction provider is Manifold only. See current-state.md.
+
 # CoinAPI adoption gate and offline test contract
 
 Status: IN PROGRESS, NOT LIVE FUTURES READY. Last reviewed 2026-10-28.

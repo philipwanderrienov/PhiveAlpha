@@ -14,7 +14,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient;
-import reactor.util.retry.Retry;
+import com.coinmind.market.service.MarketDataValidity;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -55,16 +55,12 @@ public class BinanceKlineClient {
         log.info("Connecting to Binance kline streams. symbols={}, intervals={}",
                 properties.symbols(), properties.intervals());
 
-        webSocketClient.execute(uri, session ->
+        MarketStreamRecovery.reconnecting(webSocketClient.execute(uri, session ->
                         session.receive()
                                 .timeout(Duration.ofSeconds(30))
                                 .doOnNext(message -> handlePayload(message.getPayloadAsText()))
                                 .then()
-                )
-                .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(2))
-                        .maxBackoff(Duration.ofSeconds(30))
-                        .doBeforeRetry(signal ->
-                                log.warn("Binance kline WebSocket disconnected. Reconnecting. attempt={}, cause={}", signal.totalRetries() + 1, signal.failure().toString())))
+                ))
                 .subscribe(
                         ignored -> { },
                         error -> log.error("Binance kline WebSocket terminated unexpectedly", error)
@@ -87,7 +83,8 @@ public class BinanceKlineClient {
             JsonNode data = envelope.path("data");
             JsonNode kline = data.path("k");
 
-            if (data.isMissingNode() || kline.isMissingNode()) {
+            if (data.isMissingNode() || kline.isMissingNode() || !data.has("E")
+                    || !kline.has("t") || !kline.has("T") || !kline.has("n") || !kline.has("x")) {
                 return;
             }
 
@@ -107,6 +104,11 @@ public class BinanceKlineClient {
                     Instant.ofEpochMilli(data.path("E").asLong())
             );
 
+            if (!MarketDataValidity.candle(candlestick)
+                    || !MarketDataValidity.fresh(candlestick.eventTime(), Instant.now())
+                    || candlestick.openTime().isAfter(Instant.now().plusSeconds(5))
+                    || !properties.symbols().contains(candlestick.symbol())
+                    || !properties.intervals().contains(candlestick.interval())) return;
             candlestickService.publish(candlestick);
             historyService.upsert(candlestick);
 
@@ -119,6 +121,6 @@ public class BinanceKlineClient {
     }
 
     private BigDecimal decimal(JsonNode node, String field) {
-        return new BigDecimal(node.path(field).asText("0"));
+        return new BigDecimal(node.path(field).asText());
     }
 }

@@ -19,17 +19,20 @@ public class MarketFeedHealthController {
 
     private static final Duration STALE_AFTER = Duration.ofSeconds(30);
 
+    private final com.coinmind.config.MarketProperties properties;
     private final MarketTickerService tickerService;
     private final MarketCandlestickService candlestickService;
     private final OrderBookService orderBookService;
     private final TradeService tradeService;
 
     public MarketFeedHealthController(
+            com.coinmind.config.MarketProperties properties,
             MarketTickerService tickerService,
             MarketCandlestickService candlestickService,
             OrderBookService orderBookService,
             TradeService tradeService
     ) {
+        this.properties = properties;
         this.tickerService = tickerService;
         this.candlestickService = candlestickService;
         this.orderBookService = orderBookService;
@@ -46,15 +49,21 @@ public class MarketFeedHealthController {
         streams.put("orderBook", streamHealth(orderBookService.lastEventAt(), now));
         streams.put("trade", streamHealth(tradeService.lastEventAt(), now));
 
+        for (String symbol : properties.symbols()) {
+            streams.put("ticker:" + symbol, streamHealth(tickerService.getLatest(symbol).map(t -> t.eventTime()).orElse(null), now));
+            for (String interval : properties.intervals()) {
+                streams.put("kline:" + symbol + ":" + interval, streamHealth(candlestickService.getLatest(symbol, interval).map(c -> c.eventTime()).orElse(null), now));
+            }
+        }
         boolean anyStarting = streams.values().stream()
-                .anyMatch(stream -> "STARTING".equals(stream.status()));
+                .anyMatch(stream -> "UNAVAILABLE".equals(stream.status()));
         boolean anyStale = streams.values().stream()
                 .anyMatch(stream -> "STALE".equals(stream.status()));
 
         String status = anyStale
                 ? "DEGRADED"
                 : anyStarting
-                    ? "STARTING"
+                    ? "DEGRADED"
                     : "UP";
 
         return new FeedHealthResponse(status, now, streams);
@@ -62,11 +71,11 @@ public class MarketFeedHealthController {
 
     private StreamHealth streamHealth(Instant lastEventAt, Instant now) {
         if (lastEventAt == null) {
-            return new StreamHealth("STARTING", null, null);
+            return new StreamHealth("UNAVAILABLE", null, null);
         }
 
         long ageSeconds = Math.max(0, Duration.between(lastEventAt, now).toSeconds());
-        String status = ageSeconds > STALE_AFTER.toSeconds() ? "STALE" : "UP";
+        String status = !com.coinmind.market.service.MarketDataValidity.fresh(lastEventAt, now) ? "STALE" : "UP";
 
         return new StreamHealth(status, lastEventAt, ageSeconds);
     }

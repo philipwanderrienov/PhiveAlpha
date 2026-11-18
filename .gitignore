@@ -31,3 +31,6 @@ logs/
 data/
 redis-data/
 postgres-data/
+
+# Local environment backups
+.env.*

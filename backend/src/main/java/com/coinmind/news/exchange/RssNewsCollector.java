@@ -32,6 +32,22 @@ public class RssNewsCollector {
     private final NewsService newsService;
     private final WebClient webClient;
 
+    private final java.util.Map<String, SourceStatus> health = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.time.Duration RESPONSE_TIMEOUT = java.time.Duration.ofSeconds(10);
+
+    /** UNKNOWN: never completed; UP: valid feed with usable dated articles;
+     * EMPTY: valid feed without usable articles; UNAVAILABLE: transport/HTTP/XML failure. */
+    public record SourceStatus(String source, String state, Instant lastCheckedAt,
+                               Instant lastSuccessAt, String error, int articleCount, int skippedInvalidDate) {}
+    public record SourceHealth(java.util.List<SourceStatus> sources, Instant checkedAt) {}
+
+    public SourceHealth sourceHealth() {
+        var urls = properties.rssUrls() == null ? java.util.List.<String>of() : properties.rssUrls();
+        return new SourceHealth(urls.stream().filter(u -> u != null && !u.isBlank()).distinct()
+                .map(u -> health.getOrDefault(u, new SourceStatus(host(u), "UNKNOWN", null, null, null, 0, 0)))
+                .toList(), Instant.now());
+    }
+
     public RssNewsCollector(
             NewsProperties properties,
             NewsService newsService
@@ -40,6 +56,8 @@ public class RssNewsCollector {
         this.newsService = newsService;
 
         HttpClient httpClient = HttpClient.create()
+                .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .responseTimeout(RESPONSE_TIMEOUT)
                 .followRedirect(true);
 
         this.webClient = WebClient.builder()
@@ -68,70 +86,30 @@ public class RssNewsCollector {
     }
 
     private void fetch(String url) {
-        webClient.get()
-                .uri(URI.create(url))
-                .exchangeToMono(response ->
-                        response.bodyToMono(String.class)
-                                .defaultIfEmpty("")
-                                .map(body -> new FeedResponse(
-                                        response.statusCode().value(),
-                                        response.headers()
-                                                .contentType()
-                                                .map(MediaType::toString)
-                                                .orElse("unknown"),
-                                        body
-                                ))
-                )
-                .subscribe(
-                        response -> {
-                            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                                log.warn(
-                                        "RSS fetch returned non-success status. url={}, status={}",
-                                        url,
-                                        response.statusCode()
-                                );
-                                return;
-                            }
-
-                            if (!looksLikeXml(response.body())) {
-                                log.warn(
-                                        "RSS response is not XML. url={}, contentType={}, bodyPrefix={}",
-                                        url,
-                                        response.contentType(),
-                                        bodyPrefix(response.body())
-                                );
-                                return;
-                            }
-
-                            parse(url, response.body());
-                        },
-                        error -> log.warn("RSS fetch failed. url={}", url, error)
-                );
+        fetchResult(url).subscribe();
     }
 
-    private boolean looksLikeXml(String body) {
-        if (body == null || body.isBlank()) {
-            return false;
-        }
-
-        String normalized = body.stripLeading();
-
-        return normalized.startsWith("<?xml")
-                || normalized.startsWith("<rss")
-                || normalized.startsWith("<feed")
-                || normalized.startsWith("<rdf:RDF");
-    }
-
-    private String bodyPrefix(String body) {
-        if (body == null) {
-            return "";
-        }
-
-        String normalized = body
-                .replaceAll("\\s+", " ")
-                .trim();
-
-        return normalized.substring(0, Math.min(normalized.length(), 160));
+    // Deferred so malformed URIs and parser failures use the same health/error path.
+    reactor.core.publisher.Mono<Void> fetchResult(String url) {
+        return reactor.core.publisher.Mono.defer(() -> webClient.get().uri(URI.create(url))
+                .exchangeToMono(response -> {
+                    if (!response.statusCode().is2xxSuccessful()) {
+                        return response.releaseBody().then(reactor.core.publisher.Mono.error(
+                                new IllegalStateException("HTTP_" + response.statusCode().value())));
+                    }
+                    return response.bodyToMono(String.class).defaultIfEmpty("");
+                }))
+                .timeout(RESPONSE_TIMEOUT)
+                .doOnNext(xml -> parse(url, xml))
+                .onErrorResume(error -> {
+                    String reason = error instanceof IllegalStateException && error.getMessage() != null
+                            && error.getMessage().matches("HTTP_[0-9]{3}") ? error.getMessage()
+                            : error instanceof java.util.concurrent.TimeoutException ? "TIMEOUT" : "FETCH_OR_XML_ERROR";
+                    health.compute(url, (key, old) -> new SourceStatus(host(url), "UNAVAILABLE",
+                            Instant.now(), old == null ? null : old.lastSuccessAt(), reason, 0, 0));
+                    log.warn("RSS source unavailable: source={}, reason={}", host(url), reason);
+                    return reactor.core.publisher.Mono.empty();
+                }).then();
     }
 
     private void parse(String sourceUrl, String xml) {
@@ -141,36 +119,28 @@ public class RssNewsCollector {
             factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
             factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
             factory.setExpandEntityReferences(false);
-
-            Document document = factory.newDocumentBuilder()
-                    .parse(new InputSource(new StringReader(xml)));
-
+            Document document = factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
+            String root = document.getDocumentElement().getTagName();
+            if (!root.equals("rss") && !root.equals("rdf:RDF")) throw new IllegalArgumentException("Invalid RSS root");
             NodeList items = document.getElementsByTagName("item");
-
+            int count = 0;
+            int skipped = 0;
             for (int i = 0; i < items.getLength(); i++) {
                 Element item = (Element) items.item(i);
-
+                Instant date = parseDate(text(item, "pubDate"));
+                if (date == null || date.isAfter(Instant.now())) { skipped++; continue; }
                 String title = text(item, "title");
+                if (title.isBlank()) continue;
                 String link = text(item, "link");
                 String guid = text(item, "guid");
-                String description = stripHtml(text(item, "description"));
-                String pubDate = text(item, "pubDate");
-
-                String id = !guid.isBlank()
-                        ? guid
-                        : (!link.isBlank() ? link : sourceUrl + "#" + title.hashCode());
-
-                newsService.ingest(
-                        id,
-                        title,
-                        host(sourceUrl),
-                        link,
-                        description,
-                        parseDate(pubDate)
-                );
+                String id = !guid.isBlank() ? guid : (!link.isBlank() ? link : sourceUrl + "#" + title.hashCode());
+                newsService.ingest(id, title, host(sourceUrl), link, stripHtml(text(item, "description")), date);
+                count++;
             }
+            health.put(sourceUrl, new SourceStatus(host(sourceUrl), count > 0 ? "UP" : "EMPTY",
+                    Instant.now(), Instant.now(), skipped > 0 ? "INVALID_PUBLICATION_DATE_SKIPPED" : null, count, skipped));
         } catch (Exception ex) {
-            log.warn("RSS parse failed. url={}", sourceUrl, ex);
+            throw new IllegalArgumentException("Invalid RSS XML", ex);
         }
     }
 
@@ -187,15 +157,8 @@ public class RssNewsCollector {
         try {
             return ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant();
         } catch (Exception ignored) {
-            return Instant.now();
+            return null;
         }
-    }
-
-    private record FeedResponse(
-            int statusCode,
-            String contentType,
-            String body
-    ) {
     }
 
     private String host(String url) {

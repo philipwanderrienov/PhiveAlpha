@@ -1,12 +1,16 @@
+import { marketEventFresh } from './core/market-data-validity';
+import { GuidedTourComponent } from './features/tutorial/guided-tour.component';
+import { DASHBOARD_STEPS } from './features/tutorial/dashboard-tour';
+import { newsSourceLabel, safeNewsUrl } from './core/news-presentation';
+import { aiStatusLabel } from './core/ai-status-label';
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Subscription, auditTime, catchError, fromEvent, map, of, retry, switchMap, timer } from 'rxjs';
 import {
   AiAnalysisResult,
   AiBenchmarkConfig,
   AiDecisionReview,
   AiNewsIntelligence,
-  AiPolymarketIntelligence,
   AiAnalysisHistoryItem,
   AiEngineStatus,
   AiEvaluationSummary,
@@ -22,7 +26,7 @@ import {
   MarketFeedHealth,
   NewsArticle,
   NewsSentimentSummary,
-  PolymarketIntelligence,
+  ManifoldIntelligence,
   OrderBookSnapshot,
   TechnicalIndicators,
   TickerSnapshot,
@@ -37,12 +41,41 @@ import { formatCompact, formatPrice } from './shared/price-format';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, MarketChartComponent, PaperRiskComponent],
+  imports: [GuidedTourComponent, CommonModule, MarketChartComponent, PaperRiskComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  readonly tutorialActive = signal(false);
+  readonly tutorialStatus = signal('Belum dimulai');
+  readonly upcomingTutorials = ['Membaca chart dan indikator', 'News & Sentiment', 'Trade Decision', 'Simulasi & Risiko', 'AI & Usage'];
+
+  startDashboardTutorial(): void {
+    this.navigateToView('dashboard');
+    this.tutorialActive.set(true);
+  }
+
+  prepareTutorialStep(index: number): void {
+    const step = DASHBOARD_STEPS[index];
+    this.navigateToView(step.view);
+    this.sidebarOpen.set('menu' in step && step.menu);
+    this.changeDetector.detectChanges();
+    const news = document.querySelector<HTMLDetailsElement>('#news');
+    if (step.view === 'news' && news) news.open = true;
+  }
+
+  finishTutorial(result: 'completed' | 'skipped' | 'exited'): void {
+    this.tutorialActive.set(false);
+    this.tutorialStatus.set(result === 'completed' ? 'Selesai' : result === 'skipped' ? 'Dilewati' : 'Dihentikan');
+    this.navigateToView('tutorial');
+    this.changeDetector.detectChanges();
+    document.querySelector<HTMLButtonElement>('[data-tutorial-start]')?.focus();
+  }
+
   readonly Math = Math;
+  readonly newsSourceLabel = newsSourceLabel;
+  readonly safeNewsUrl = safeNewsUrl;
   private readonly marketApi = inject(MarketApiService);
   private readonly pushNotifications = inject(PushNotificationService);
   private readonly subscriptions = new Subscription();
@@ -86,13 +119,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly aiHistory = signal<AiAnalysisHistoryItem[]>([]);
   readonly aiEvaluationSummary = signal<AiEvaluationSummary | null>(null);
   readonly aiBenchmarkConfig = signal<AiBenchmarkConfig | null>(null);
+  aiStatusLabel(): string {
+    return aiStatusLabel(this.aiStatus()?.state);
+  }
+
   readonly aiStatus = signal<AiEngineStatus | null>(null);
   readonly aiGuardrails = signal<AiGuardrailStatus | null>(null);
   readonly news = signal<NewsArticle[]>([]);
   readonly newsSentiment = signal<NewsSentimentSummary | null>(null);
-  readonly polymarketIntelligence = signal<PolymarketIntelligence | null>(null);
-  readonly aiPolymarketIntelligence = signal<AiPolymarketIntelligence | null>(null);
-  readonly aiPolymarketRunning = signal(false);
+  readonly manifoldIntelligence = signal<ManifoldIntelligence | null>(null);
   readonly aiUsage = signal<AiUsageSummary | null>(null);
   readonly aiCostCenter = signal<AiCostCenterSummary | null>(null);
   readonly billingStatus = signal<BillingStatus | null>(null);
@@ -106,7 +141,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly floatingCoinMenuOpen = signal(false);
   readonly floatingCoinMenuDirection = signal<'up' | 'down'>('up');
   readonly floatingCoinDragging = signal(false);
-  readonly activeSection = signal<'dashboard' | 'trade' | 'news' | 'ai' | 'billing' | 'paper-risk'>('dashboard');
+  readonly activeSection = signal<'dashboard' | 'trade' | 'news' | 'ai' | 'billing' | 'paper-risk' | 'tutorial'>('dashboard');
   readonly sidebarOpen = signal(false);
   private floatingCoinDrag: {
     pointerId: number;
@@ -196,7 +231,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   readonly marketUiStatus = computed(() => {
     const state = this.connectionState();
+    // Re-evaluated by the five-second watchdog as exchange observations age.
+    const now = Date.now();
+    if (!marketEventFresh(Date.parse(this.selectedTicker()?.eventTime ?? ''), now)) return this.selectedTicker() ? 'STALE' : 'UNAVAILABLE';
 
+    if (!marketEventFresh(Date.parse(this.currentCandle()?.eventTime ?? ''), now)) return 'STALE';
+    if (!this.selectedTicker()) return 'UNAVAILABLE';
+    if (!this.marketFeedHealth() || this.marketFeedHealth()?.status !== 'UP') return 'DEGRADED';
     if (state === 'live') {
       return 'LIVE';
     }
@@ -241,8 +282,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadAiBenchmarkConfig();
     this.loadAiGuardrails();
     this.loadNews();
-    this.loadPolymarketIntelligence();
-    this.loadAiPolymarketIntelligence();
+    this.loadManifoldIntelligence();
     this.startAiUsageMonitoring();
     this.loadAiCostCenter();
     this.loadBillingStatus();
@@ -462,7 +502,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToView(
-    view: 'dashboard' | 'trade' | 'news' | 'ai' | 'billing' | 'paper-risk',
+    view: 'dashboard' | 'trade' | 'news' | 'ai' | 'billing' | 'paper-risk' | 'tutorial',
     event?: MouseEvent
   ): void {
     event?.preventDefault();
@@ -495,7 +535,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     const hashView = rawHash.startsWith('view=')
       ? rawHash.slice('view='.length)
       : '';
-    const knownViews = ['dashboard', 'trade', 'news', 'ai', 'billing', 'paper-risk'] as const;
+    const knownViews = ['dashboard', 'trade', 'news', 'ai', 'billing', 'paper-risk', 'tutorial'] as const;
 
     window.history.scrollRestoration = 'manual';
 
@@ -525,8 +565,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadAiHistory();
     this.loadAiEvaluationSummary();
     this.loadNews();
-    this.loadPolymarketIntelligence();
-    this.loadAiPolymarketIntelligence();
+    this.loadManifoldIntelligence();
   }
 
   selectInterval(interval: string): void {
@@ -552,35 +591,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showMacd.update(value => !value);
   }
 
-  runAiPolymarketIntelligence(): void {
-    if (this.aiPolymarketRunning()) {
-      return;
-    }
 
-    const state = this.aiStatus()?.state;
-    if (state !== 'READY' && state !== 'CONFIGURED_UNVERIFIED' && state !== 'MOCK') {
-      return;
-    }
-
-    this.aiPolymarketRunning.set(true);
-
-    this.subscriptions.add(
-      this.marketApi.analyzePolymarketIntelligence(this.selectedSymbol()).subscribe({
-        next: result => {
-          this.aiPolymarketIntelligence.set(result);
-          this.aiPolymarketRunning.set(false);
-          this.loadAiUsage();
-          this.loadAiCostCenter();
-          this.loadAiStatus();
-          this.loadAiGuardrails();
-        },
-        error: () => {
-          this.aiPolymarketRunning.set(false);
-          this.loadAiStatus();
-        }
-      })
-    );
-  }
 
   runAiNewsIntelligence(): void {
     if (this.aiNewsIntelligenceRunning()) {
@@ -867,8 +878,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             this.loadMicrostructure();
             this.loadMarketActivity();
             this.loadNews();
-            this.loadPolymarketIntelligence();
-            this.loadAiPolymarketIntelligence();
+            this.loadManifoldIntelligence();
           }
         })
     );
@@ -941,36 +951,38 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  private loadPolymarketIntelligence(): void {
+  private loadManifoldIntelligence(): void {
     this.subscriptions.add(
-      this.marketApi.getPolymarketIntelligence(this.selectedSymbol()).subscribe({
-        next: intelligence => this.polymarketIntelligence.set(intelligence),
-        error: () => this.polymarketIntelligence.set(null)
+      this.marketApi.getManifoldIntelligence(this.selectedSymbol()).subscribe({
+        next: intelligence => this.manifoldIntelligence.set(intelligence),
+        error: () => this.manifoldIntelligence.set(null)
       })
     );
   }
 
-  private loadAiPolymarketIntelligence(): void {
-    this.subscriptions.add(
-      this.marketApi.getAiPolymarketIntelligence(this.selectedSymbol()).subscribe({
-        next: intelligence => this.aiPolymarketIntelligence.set(intelligence),
-        error: () => this.aiPolymarketIntelligence.set(null)
-      })
-    );
-  }
+
+
+  readonly newsLoading = signal(true);
+  readonly newsFailed = signal(false);
+  readonly sentimentLoading = signal(true);
+  private newsRequest = 0;
 
   private loadNews(): void {
+    const request = ++this.newsRequest;
+    this.newsLoading.set(true);
+    this.newsFailed.set(false);
+    this.sentimentLoading.set(true);
     this.subscriptions.add(
       this.marketApi.getNews(this.selectedSymbol(), 8).subscribe({
-        next: articles => this.news.set(articles),
-        error: () => this.news.set([])
+        next: articles => { if (request !== this.newsRequest) return; this.news.set(articles); this.newsLoading.set(false); },
+        error: () => { if (request !== this.newsRequest) return; this.news.set([]); this.newsFailed.set(true); this.newsLoading.set(false); }
       })
     );
 
     this.subscriptions.add(
       this.marketApi.getNewsSentiment(this.selectedSymbol()).subscribe({
-        next: sentiment => this.newsSentiment.set(sentiment),
-        error: () => this.newsSentiment.set(null)
+        next: sentiment => { if (request !== this.newsRequest) return; this.newsSentiment.set(sentiment); this.sentimentLoading.set(false); },
+        error: () => { if (request !== this.newsRequest) return; this.newsSentiment.set(null); this.sentimentLoading.set(false); }
       })
     );
   }
@@ -1159,7 +1171,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        if (ageMs <= this.staleThresholdMs) {
+        const tickerTime = Date.parse(this.selectedTicker()?.eventTime ?? '');
+        const candleTime = Date.parse(this.currentCandle()?.eventTime ?? '');
+        if (ageMs <= this.staleThresholdMs && marketEventFresh(tickerTime, now) && marketEventFresh(candleTime, now)) {
           return;
         }
 
@@ -1192,7 +1206,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         .pipe(retry({ delay: retryDelay }))
         .subscribe({
           next: ticker => {
-            this.connectionState.set('live');
+            if (!marketEventFresh(Date.parse(ticker.eventTime), Date.now())) return;
+            if (ticker.symbol === this.selectedSymbol()) this.connectionState.set('live');
             this.lastMarketEventAt.set(new Date());
             this.tickers.update(current => ({
               ...current,
@@ -1227,7 +1242,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         .pipe(retry({ delay: retryDelay }))
         .subscribe({
           next: candle => {
-            this.connectionState.set('live');
+            if (!marketEventFresh(Date.parse(candle.eventTime), Date.now())) return;
+            if (candle.symbol === this.selectedSymbol()) this.connectionState.set('live');
             this.lastMarketEventAt.set(new Date());
             this.upsertCandle(candle);
 

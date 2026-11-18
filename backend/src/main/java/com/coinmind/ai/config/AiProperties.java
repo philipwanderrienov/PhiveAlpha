@@ -32,12 +32,7 @@ public record AiProperties(
         List<String> triggerIntervals,
         BigDecimal minimumAutomaticSignalScore,
         int maxAutomaticCallsPerHour,
-        int maxAutomaticCallsPerDay,
-        boolean polymarketEnabled,
-        BigDecimal polymarketMinProbabilityChange,
-        int polymarketMinImportance,
-        int polymarketDeepMaterialityScore,
-        int polymarketCacheMinutes
+        int maxAutomaticCallsPerDay
 ) {
     public String effectiveRoutineModel() {
         return routineModel == null || routineModel.isBlank() ? model : routineModel;
