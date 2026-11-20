@@ -1,0 +1,31 @@
+{
+  "is_success": true,
+  "data": {
+    "data": [
+      {
+        "date": "2026-11-11",
+        "open": 9780,
+        "high": 9810,
+        "low": 9765,
+        "close": 9790,
+        "volume": 1000,
+        "value": "9789900.1234567890123456789"
+      },
+      {
+        "date": "2026-11-13",
+        "open": 9790,
+        "high": 9830,
+        "low": 9780,
+        "close": 9800,
+        "volume": 2222,
+        "value": "21900000"
+      }
+    ],
+    "meta": {
+      "count": 2,
+      "as_of": "2026-11-13T09:30:00Z",
+      "cursor": null,
+      "stale_seconds": "5"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "is_success": true,
+  "data": {
+    "data": [
+      {
+        "time": "10:00",
+        "price": "9800",
+        "brokers": [
+          {
+            "broker_code": " aa ",
+            "net_value": "-445512.25",
+            "net_lot": "-15"
+          }
+        ]
+      }
+    ],
+    "meta": {
+      "count": 1,
+      "as_of": "2026-11-13T09:30:00Z",
+      "cursor": null,
+      "stale_seconds": "5"
+    },
+    "date": "2026-11-13",
+    "brokers": [
+      "AA"
+    ]
+  }
+}

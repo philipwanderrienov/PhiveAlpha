@@ -858,3 +858,35 @@ Final command mvn -o -f backend/pom.xml -DargLine=-javaagent:/home/phive/.m2/rep
 Replaced global Manifold health with per-symbol status/timestamp/count; existing endpoint fields retained, additive symbol and symbols lookup. Preserved per-symbol cache/cooldown; successful EMPTY cached; failed refresh retains stored cache but suppresses it from advisor, NONE fallback zero-confidence/no valid reasons. Malformed/non-array JSON unavailable. RSS read-only health snapshot, UNKNOWN/UP/EMPTY/UNAVAILABLE, last success retained across failures, safe errors/counts; 5s connect/10s response+total deadlines. Invalid/missing/future dates skipped/counted; NewsService rejects null/future timestamps before overwriting history/event emission. CoinDesk/Cointelegraph config unchanged. Contract, changed-file inventory and limitations: cm102-provider-health.md.
 
 Final sequential offline Maven clean verify 210 passed,0 failures/errors/skips; Manifold4, RSS3, News3, Trade Setup6, CM-101 Binance9 and Gemini regression suites passed. RSS virtual-time stalled request verifies actual10s operator; health HTTP test asserts zero fetch/NewsService calls. Initial209-test run passed before final additive metadata/virtual-time coverage; final210-test run is acceptance. Log /tmp/coinmind-cm102-final-verify.log. git diff --check passed. Angular unchanged, frontend checks not required. CM-102 ready for RC review; live upstream/network UAT and single-entry Manifold client compatibility remain risks. Local main9bf10ce inspected; prior dirty work retained. No technical scoring, Binance, Gemini recovery/ledger/lock/quota/cooldown/freshness change, live Gemini/order, .env/server config, deploy/restart, commit/push/reset. CM-103 not started.
+
+## 2026-11-18 — PhiveAlpha Phase 1A (lokal)
+
+Menambahkan entry point dan profil build PhiveAlpha, paket IDX `stock`, `marketdata`, `newsintelligence`, `screening`, `risk`, serta kontrak provider API.co.id dengan fixture. Target Angular terpisah memuat kelima halaman lewat lazy routing. Paper Trading menghitung estimasi bruto dari harga fixture. Stack R2DBC/PostgreSQL tersedia sebagai dependensi dan koneksi dinonaktifkan pada runtime fixture.
+
+Maven offline 215 tes lulus, termasuk lima tes konteks WebFlux, perilaku endpoint, dan isolasi CoinMind/R2DBC. Build produksi Angular 22.1.7 lulus untuk kedua target. Target CoinMind masih menghasilkan peringatan template lama. Sandbox menolak pembuatan socket untuk uji browser loopback. Artefak PhiveAlpha dikemas secara lokal. Lihat [runbook lokal, inventaris perubahan dan dependensi penghapusan crypto](phivealpha-phase-1a.md).
+
+Branch `main` dan recovery tag `coinmind-pre-phivealpha-20261118` tetap di commit `10b7a67`. Fase ini berjalan tanpa perubahan production, migration baru, API call eksternal, API key, commit atau push.
+
+## 2026-11-18 — PhiveAlpha Phase 1C (lokal)
+
+Menambahkan schema IDX, repository/service reaktif, kalender sesi BEI, profil opt-in dan runner integration PostgreSQL terisolasi. Fixture tetap menjadi sumber untuk endpoint Phase 1A. Maven 220 tes lulus dengan Mockito Java agent setelah self-attach diblokir sandbox. Kedua paket backend dan build Angular lulus. DDL menghasilkan enam tabel dan rollback menghapus schema di PostgreSQL single-user sementara. Integration R2DBC dan smoke browser berstatus NOT RUN karena sandbox. Tidak ada commit, push, deploy, perubahan production atau panggilan provider live. Recovery tag tetap menunjuk `10b7a67`. [Handoff Phase 1C](phivealpha-phase-1c.md)
+
+## 2026-11-18 — PhiveAlpha Phase 1D (lokal)
+
+Menambahkan adapter HTTP IDX opt-in dengan tujuh mapping dataset, pagination lengkap atau gagal tertutup, kebijakan kuota, cache, retry/circuit breaker dan audit aman. Kalender BEI berversi memvalidasi hari libur dan sesi khusus. Fixture tetap default. Profil HTTP memisahkan hasil unverified dari UI dan screening. Maven offline 238 tes lulus dengan Mockito Java agent, termasuk 18 kasus baru. Ulang tes profil dengan `CI=true` membuktikan penolakan startup profil network. Kedua paket backend dan build Angular lulus. Live canary NOT RUN. Tidak ada commit, push, perubahan production atau panggilan API.co.id. [Handoff Phase 1D](phivealpha-phase-1d.md)
+
+## 2026-11-19 — PhiveAlpha Phase 1D.2 (lokal)
+
+Menambahkan CLI developer quote BBCA di luar konteks Spring, guard CI, flag live dan persetujuan entitlement per endpoint, batas satu admission tanpa retry, serta laporan metadata tanpa payload/credential. Audit universe IHSG, pagination, adjustment OHLCV, riwayat berita dan kuota akun ada di handoff. Maven 250 lulus dan satu uji loopback dilewati karena sandbox; kedua paket backend, unit frontend dan kedua build Angular lulus. Live disengaja belum dijalankan. Fixture, BUY dan produksi tetap mengikuti konfigurasi sebelumnya. Tidak ada commit atau push. [Handoff Phase 1D.2](phivealpha-phase-1d2.md)
+
+## 2026-11-19 — PhiveAlpha Phase 1E (lokal)
+
+Menambahkan engine eligibility saham biasa IDX, referensi universe dan kalender point-in-time, kontrol kualitas EOD dan ranking likuiditas terpisah. Fixture menguji no-look-ahead, median dan aktivitas, kalender termasuk libur/sesi khusus, serta tiga hasil eligible tanpa padding. Maven offline 257 lulus dengan satu skip connector Phase 1D.2 akibat sandbox. Kedua paket backend, unit frontend, dan kedua build Angular lulus. Tidak ada koneksi provider/database, sinyal baru, perubahan produksi, commit, atau push. [Handoff Phase 1E](phivealpha-phase-1e.md)
+
+## 2026-11-19 — PhiveAlpha Phase 1F (lokal)
+
+Menambahkan scoring research-only lima faktor di atas hasil LiquidUniverse, dengan mutu dan provenance per faktor, deduplikasi event kanonik, penolakan input masa depan dan ranking deterministik sampai lima kandidat. Fixture utama memberi dua kandidat. Maven offline 264 lulus dengan satu skip connector Phase 1D.2 akibat sandbox. Kedua paket backend, unit frontend, dan build Angular lulus. Tidak ada perubahan perilaku fixture, provider live, database, produksi, sinyal, commit, atau push. [Handoff Phase 1F](phivealpha-phase-1f.md)
+
+## 2026-11-20 — PhiveAlpha Phase 1G (lokal)
+
+Menambahkan historical replay sintetis dengan vintage point-in-time, guard first-seen, asumsi biaya, benchmark berlabel, dan metrik per partisi/horizon. Embargo dan purge label mencegah exit melampaui batas partisi. Fixture mencakup berita/revisi terlambat, delisting/suspensi, hari libur, lot, corporate action, dan posisi unresolved. Maven offline 271 lulus dengan satu skip connector Phase 1D.2 akibat sandbox. Kedua paket backend, unit frontend, dan build Angular lulus. Endpoint fixture berjalan seperti sebelumnya. Tidak ada provider live, database production, deploy, restart, sinyal, commit, atau push. [Handoff Phase 1G](phivealpha-phase-1g.md)

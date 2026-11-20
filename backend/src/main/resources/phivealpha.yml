@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: PhiveAlpha
+  sql:
+    init:
+      mode: never
+server:
+  address: 127.0.0.1
+  port: 8182
+---
+spring:
+  config:
+    activate:
+      on-profile: phivealpha-persistence
+phivealpha:
+  persistence:
+    url: ${PHIVEALPHA_R2DBC_URL}
+    username: ${PHIVEALPHA_R2DBC_USERNAME}
+    password: ${PHIVEALPHA_R2DBC_PASSWORD}
+---
+spring:
+  config:
+    activate:
+      on-profile: phivealpha-api-co-id
+phivealpha:
+  api-co-id:
+    base-url: ${API_CO_ID_BASE_URL:https://use.api.co.id}
+    timeout: ${API_CO_ID_TIMEOUT:3s}
+    operation-timeout: ${API_CO_ID_OPERATION_TIMEOUT:15s}
+    concurrency: ${API_CO_ID_CONCURRENCY:1}
+    min-request-interval: ${API_CO_ID_MIN_REQUEST_INTERVAL}
+    request-budget: ${API_CO_ID_REQUEST_BUDGET}
+    max-retries: ${API_CO_ID_MAX_RETRIES:0}
+    retry-delay: ${API_CO_ID_RETRY_DELAY:1s}
+    breaker-threshold: ${API_CO_ID_BREAKER_THRESHOLD:2}
+    breaker-cooldown: ${API_CO_ID_BREAKER_COOLDOWN:1m}
+    cache-ttl: ${API_CO_ID_CACHE_TTL}
+    cache-entries: ${API_CO_ID_CACHE_ENTRIES:16}
+    max-pages: ${API_CO_ID_MAX_PAGES}
+    max-rows: ${API_CO_ID_MAX_ROWS}
+    calendar-path: ${API_CO_ID_CALENDAR_PATH}
+    expected-universe: ${API_CO_ID_EXPECTED_UNIVERSE:}
+    universe-version: ${API_CO_ID_UNIVERSE_VERSION:}

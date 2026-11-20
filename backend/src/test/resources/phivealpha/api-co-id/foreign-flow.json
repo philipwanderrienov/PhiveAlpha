@@ -1,0 +1,19 @@
+{
+  "is_success": true,
+  "data": {
+    "data": [
+      {
+        "date": "2026-11-13",
+        "foreign_buy": "200000.125",
+        "foreign_sell": "300000.5",
+        "foreign_net": "-100000.375"
+      }
+    ],
+    "meta": {
+      "count": 1,
+      "as_of": "2026-11-13T09:30:00Z",
+      "cursor": null,
+      "stale_seconds": "5"
+    }
+  }
+}

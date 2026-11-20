@@ -57,6 +57,43 @@
           "defaultConfiguration": "development"
         }
       }
+    },
+    "phivealpha": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src/phivealpha",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/phivealpha",
+            "index": "src/phivealpha/index.html",
+            "browser": "src/phivealpha/main.ts",
+            "tsConfig": "tsconfig.phivealpha.json",
+            "styles": ["src/phivealpha/styles.css"]
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "buildTarget": "phivealpha:build:development",
+            "proxyConfig": "proxy.phivealpha.json",
+            "host": "127.0.0.1",
+            "port": 4282
+          }
+        }
+      }
     }
   },
   "cli": {

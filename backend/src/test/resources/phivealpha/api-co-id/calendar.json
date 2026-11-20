@@ -1,0 +1,40 @@
+{
+  "source": "Synthetic QA, based on BEI calendar manifest structure",
+  "version": "qa-2026-11-v1",
+  "days": [
+    {
+      "date": "2026-11-11",
+      "kind": "REGULAR",
+      "sessions": [
+        {
+          "open": "09:00",
+          "close": "12:00"
+        },
+        {
+          "open": "13:30",
+          "close": "16:15"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "kind": "HOLIDAY",
+      "sessions": []
+    },
+    {
+      "date": "2026-11-13",
+      "kind": "SPECIAL",
+      "sessions": [
+        {
+          "open": "09:00",
+          "close": "11:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "kind": "HOLIDAY",
+      "sessions": []
+    }
+  ]
+}

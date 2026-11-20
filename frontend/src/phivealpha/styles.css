@@ -1,0 +1,47 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+  color: #192821;
+  background: #f3f6f3;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #126044; }
+button, input { font: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 3px solid #327d61;
+  outline-offset: 3px;
+}
+
+.wrap { width: min(100% - 2rem, 70rem); margin-inline: auto; }
+.shell-header { background: #162e25; color: #fff; }
+.header-inner, .navigation { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.header-inner { justify-content: space-between; padding-block: 1rem; }
+.brand { color: inherit; font-size: 1.4rem; font-weight: 750; text-decoration: none; }
+.fixture-label { margin: 0; color: #c8e8d7; font-size: .9rem; }
+.navigation { padding-block: 1rem; border-bottom: 1px solid #cbd8cf; }
+.navigation a { padding: .55rem .7rem; border-radius: .4rem; text-decoration: none; }
+.navigation a:hover, .navigation a.active { background: #dcebe0; }
+main { padding-block: 1.5rem 3rem; }
+h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); }
+h2 { font-size: 1.15rem; margin: 0 0 .5rem; }
+.subtitle { margin: .5rem 0 1.5rem; color: #46594e; }
+.panel { padding: 1.15rem; border: 1px solid #cbd8cf; border-radius: .65rem; background: #fff; }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+}
+.panel p:last-child { margin-bottom: 0; }
+.ranking { padding-left: 2.5rem; }
+.ranking li + li { border-top: 1px solid #dce5de; margin-top: .7rem; padding-top: .7rem; }
+.ranking-row { display: flex; flex-wrap: wrap; gap: .25rem 1rem; justify-content: space-between; }
+.form-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; margin-bottom: 1rem; }
+label { display: grid; gap: .3rem; min-width: 0; }
+input { width: min(100%, 15rem); border: 1px solid #81998b; padding: .55rem; border-radius: .35rem; }
+button { border: 1px solid #12513b; border-radius: .35rem; padding: .55rem .85rem; background: #12513b; color: #fff; cursor: pointer; }
+dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 1rem; margin-bottom: 0; }
+dd { margin: 0; font-weight: 600; }

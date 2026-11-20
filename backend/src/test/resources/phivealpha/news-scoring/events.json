@@ -1,0 +1,62 @@
+{
+  "immaterial": {
+    "eventId": "community-event",
+    "label": "Issuer receives a community award",
+    "publishedAt": "2026-11-12T01:00:00Z",
+    "firstSeenAt": "2026-11-12T01:05:00Z",
+    "availableAt": "2026-11-12T01:10:00Z",
+    "materiality": 0,
+    "relevance": 1,
+    "novelty": 1,
+    "sentiment": 1,
+    "anticipated": 0
+  },
+  "negative": {
+    "eventId": "plant-closure",
+    "label": "Issuer announces production halt",
+    "publishedAt": "2026-11-12T02:00:00Z",
+    "firstSeenAt": "2026-11-12T02:05:00Z",
+    "availableAt": "2026-11-12T02:10:00Z",
+    "materiality": 1,
+    "relevance": 1,
+    "novelty": 1,
+    "sentiment": -0.8,
+    "anticipated": 0
+  },
+  "duplicate": {
+    "eventId": "plant-closure",
+    "label": "Syndicated report on production halt",
+    "publishedAt": "2026-11-12T03:00:00Z",
+    "firstSeenAt": "2026-11-12T03:05:00Z",
+    "availableAt": "2026-11-12T03:10:00Z",
+    "materiality": 1,
+    "relevance": 1,
+    "novelty": 1,
+    "sentiment": -0.80,
+    "anticipated": 0
+  },
+  "anticipated": {
+    "eventId": "forecast-confirmed",
+    "label": "Issuer confirms previously anticipated forecast",
+    "publishedAt": "2026-11-12T03:00:00Z",
+    "firstSeenAt": "2026-11-12T03:05:00Z",
+    "availableAt": "2026-11-12T03:10:00Z",
+    "materiality": 1,
+    "relevance": 1,
+    "novelty": 1,
+    "sentiment": 1,
+    "anticipated": 1
+  },
+  "late": {
+    "eventId": "late-contract",
+    "label": "Major contract announcement indexed after cutoff",
+    "publishedAt": "2026-11-13T04:40:00Z",
+    "firstSeenAt": "2026-11-13T04:45:00Z",
+    "availableAt": "2026-11-13T05:00:01Z",
+    "materiality": 1,
+    "relevance": 1,
+    "novelty": 1,
+    "sentiment": 1,
+    "anticipated": 0
+  }
+}

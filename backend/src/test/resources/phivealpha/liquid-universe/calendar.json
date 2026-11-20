@@ -1,0 +1,12 @@
+{
+  "source": "Synthetic IDX session fixture",
+  "version": "liquid-universe-calendar-v1",
+  "days": [
+    {"date":"2026-11-09","kind":"REGULAR","sessions":[{"open":"09:00","close":"16:15"}]},
+    {"date":"2026-11-10","kind":"REGULAR","sessions":[{"open":"09:00","close":"16:15"}]},
+    {"date":"2026-11-11","kind":"REGULAR","sessions":[{"open":"09:00","close":"16:15"}]},
+    {"date":"2026-11-12","kind":"HOLIDAY","sessions":[]},
+    {"date":"2026-11-13","kind":"SPECIAL","sessions":[{"open":"09:00","close":"11:30"}]},
+    {"date":"2026-11-14","kind":"HOLIDAY","sessions":[]}
+  ]
+}

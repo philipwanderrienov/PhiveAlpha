@@ -1,0 +1,23 @@
+{
+  "is_success": true,
+  "data": {
+    "data": [
+      {
+        "type": "dividend",
+        "announce_date": "2026-11-13",
+        "ex_date": "2026-11-23",
+        "record_date": "2026-11-24",
+        "pay_date": "2026-11-30",
+        "value": "200.125",
+        "ratio_old": null,
+        "ratio_new": null
+      }
+    ],
+    "meta": {
+      "count": 1,
+      "as_of": "2026-11-13T09:30:00Z",
+      "cursor": null,
+      "stale_seconds": "5"
+    }
+  }
+}

@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "ng serve",
-    "build": "ng build",
+    "start": "ng serve coinmind-web",
+    "build": "ng build coinmind-web",
+    "start:phivealpha": "ng serve phivealpha",
+    "build:phivealpha": "ng build phivealpha",
     "test": "ng test",
     "test:ai-status": "node test-ai-status.mjs",
     "test:news": "node test-news.mjs",

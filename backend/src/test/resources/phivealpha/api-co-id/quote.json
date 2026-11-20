@@ -1,0 +1,22 @@
+{
+  "is_success": true,
+  "data": {
+    "data": {
+      "symbol": "bbca",
+      "name": "Bank Contoh A",
+      "date": "2026-11-13",
+      "last": 9800,
+      "open": "9790",
+      "high": "9830",
+      "low": "9780",
+      "volume": "12345678",
+      "value": "121000000000.25"
+    },
+    "meta": {
+      "count": 1,
+      "as_of": "2026-11-13T09:30:00Z",
+      "cursor": null,
+      "stale_seconds": "5"
+    }
+  }
+}

@@ -1,3 +1,31 @@
+## 2026-11-20 — PhiveAlpha Phase 1G (lokal)
+
+`HistoricalReplayService` mengevaluasi ranking riset pada cutoff point-in-time melalui universe dan scoring yang ada. Replay sintetis memakai entry open berikutnya, exit 2/5/10 sesi, biaya dan batas lot/likuiditas, baseline likuiditas dan IHSG sintetis, serta split kronologis dengan embargo. Posisi unresolved tetap tercatat. Maven offline 271 lulus, satu uji loopback Phase 1D.2 dilewati karena sandbox. Kedua paket backend, unit frontend, dan kedua build Angular lulus. [Handoff Phase 1G](phivealpha-phase-1g.md)
+
+## 2026-11-19 — PhiveAlpha Phase 1F (lokal)
+
+`NewsDrivenScoringService` memberi ranking riset maksimum lima kandidat dari universe eligible dengan data lengkap pada cutoff. Lima faktor berbobot configurable menyimpan breakdown dan provenance. Duplikasi, ketersediaan point-in-time, dan kualitas source diperiksa sebelum ranking. Bobot dan koefisien masih hipotesis fixture. Maven offline 264 lulus dan satu uji loopback Phase 1D.2 dilewati karena sandbox. Kedua paket backend, unit frontend, dan build Angular lulus. Endpoint fixture tetap, tanpa sinyal atau request live. [Handoff Phase 1F](phivealpha-phase-1f.md)
+
+## 2026-11-19 — PhiveAlpha Phase 1E (lokal)
+
+`LiquidUniverseService` menilai saham biasa IDX dari referensi dan kalender berversi serta candle EOD yang tersedia pada cutoff. Eligibility, kualitas data, alasan penolakan, dan ranking likuiditas deterministik tersedia untuk caller internal. Policy masih hipotesis, hasil tidak dibatasi lima, dan endpoint demo tetap memakai fixture. Maven offline: 257 lulus, satu uji loopback Phase 1D.2 dilewati karena sandbox. Kedua paket backend dan build Angular lulus. [Handoff Phase 1E](phivealpha-phase-1e.md)
+
+## 2026-11-19 — PhiveAlpha Phase 1D.2 (lokal)
+
+Canary developer standalone untuk quote BBCA menuntut `--confirm-live` dan persetujuan entitlement lokal yang berlaku. Budget/concurrency/pages masing-masing satu, retry nol, laporan metadata aman, dan hasil parser lolos tetap unverified atau stale. Maven offline mencatat 250 lulus dan satu uji connector loopback dilewati karena sandbox. Kedua paket backend dan build Angular lulus. Live canary menunggu uji connector pada host development dan persetujuan akun/vendor. [Handoff Phase 1D.2](phivealpha-phase-1d2.md)
+
+## 2026-11-18 — PhiveAlpha Phase 1D (lokal)
+
+Adapter API.co.id opt-in menyediakan tujuh dataset IDX untuk caller internal, dengan budget per proses, throttle, circuit breaker, cache dan audit freshness. Kalender BEI berversi dan referensi universe memagari cakupan. Fixture tetap default. Profil HTTP memblokir rute Phase 1A dan screening selama kontrak masih unverified, serta ditolak di CI. Maven offline 238 tes lulus dengan Mockito Java agent, kedua paket backend dan kedua build Angular lulus. Live canary belum dijalankan. [Handoff Phase 1D](phivealpha-phase-1d.md)
+
+## 2026-11-18 — PhiveAlpha Phase 1C (lokal)
+
+Persistence IDX tersedia melalui profil opt-in `phivealpha-persistence` dan migrasi SQL manual pada klaster development terisolasi. Service reaktif mencakup master instrumen, harga NUMERIC per basis, berita dengan deduplikasi dan cutoff artikel/emiten, serta audit ingestion. Mode default dan endpoint tetap memakai fixture. Maven 220 tes lulus dengan Mockito Java agent, paket backend dan build Angular kedua target lulus. DDL dan rollback lulus di PostgreSQL single-user. Integration R2DBC dan smoke browser berstatus NOT RUN karena pembatasan sandbox. [Handoff Phase 1C](phivealpha-phase-1c.md)
+
+## 2026-11-18 — PhiveAlpha Phase 1A (lokal)
+
+Fondasi aplikasi IDX tersedia pada `main` dengan entry point Spring Boot/WebFlux dan target Angular terpisah. API fixture menyediakan snapshot, Weekly Top 5, headline dan estimasi lot untuk kelima halaman. R2DBC/PostgreSQL tersedia sebagai dependensi. Mode fixture mematikan koneksi dan inisialisasi SQL. CoinMind tetap tersedia melalui build default. Kontrak, cara menjalankan demo, dan dependensi penghapusan crypto tercatat di [handoff Phase 1A](phivealpha-phase-1a.md).
+
 ## 2026-11-16 — CM-102 Provider Health & Recovery (local, NOT deployed)
 
 Manifold health now per BTCUSDT/ETHUSDT/SOLUSDT, with additive symbol/map and retained endpoint fields; UNKNOWN/UP/EMPTY/UNAVAILABLE, attempt timestamp/count, isolated cooldown/cache. Invalid JSON/non-array fails unavailable; cached success suppressed after failed refresh, NONE fallback never contributes advisor confidence/reasons. RSS read-only `/api/v1/news/source-health` reports each configured publisher, attempt/last-success, safe error, usable/invalid-date counts; 5s connect/10s response+total deadline. Missing/invalid/future dates skipped; NewsService rejects null/future updates without replacing valid history or publishing events. CoinDesk/Cointelegraph config and RFC1123 parser retained. No Angular changes.

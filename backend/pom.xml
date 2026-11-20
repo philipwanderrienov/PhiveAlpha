@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>25</java.version>
+        <application.main-class>com.coinmind.CoinMindApplication</application.main-class>
     </properties>
 
     <dependencies>
@@ -98,7 +99,21 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>${application.main-class}</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>phivealpha</id>
+            <properties>
+                <application.main-class>com.phivealpha.PhiveAlphaApplication</application.main-class>
+            </properties>
+            <build>
+                <finalName>phivealpha-backend</finalName>
+            </build>
+        </profile>
+    </profiles>
 </project>
