@@ -78,6 +78,18 @@ class IdxFoundationTest {
     }
 
     @Test
+    void stockScreenerExposesReadOnlyFixtureWithScoresAndProvenance() {
+        client.get().uri("/api/idx/v1/stock-screener").exchange().expectStatus().isOk()
+                .expectBody().jsonPath("$.mode").isEqualTo("FIXTURE")
+                .jsonPath("$.quality").isEqualTo("COMPLETE")
+                .jsonPath("$.scoring.purpose").isEqualTo("RESEARCH_ONLY")
+                .jsonPath("$.scoring.ranking.length()").isEqualTo(5)
+                .jsonPath("$.scoring.ranking[0].assessment.factors.length()").isEqualTo(5)
+                .jsonPath("$.liquidity.calendarVersion").isEqualTo("screener-fixture-calendar-v1");
+        client.post().uri("/api/idx/v1/stock-screener").exchange().expectStatus().isEqualTo(405);
+    }
+
+    @Test
     void returnsFiveStocksInDescendingWeeklyOrder() {
         client.get().uri("/api/idx/v1/weekly-top-five").exchange().expectStatus().isOk()
                 .expectBody().jsonPath("$[*].symbol").isEqualTo(

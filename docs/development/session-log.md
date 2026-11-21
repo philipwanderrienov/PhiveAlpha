@@ -906,3 +906,7 @@ Menambah jalur SIT PostgreSQL 17 terisolasi untuk mirror metadata dan regresi in
 ## 2026-11-21 — PhiveAlpha Phase 1J (lokal)
 
 Menambah ingestion OHLCV fixture dengan validasi sesi dan provenance, penulisan tanpa overwrite, turnover opsional, audit fixture dan jalur screening as-of. Baseline lokal 3f8940f. Maven offline CI 86 lulus dan satu skip. SQL PostgreSQL 17 single-user lulus dan artefak PhiveAlpha bebas kelas serta resource CoinMind. Runner R2DBC tertahan probe socket. Tidak ada API live, transaksi, perubahan production, deployment, commit atau push. [Handoff Phase 1J](phivealpha-phase-1j.md)
+
+## 2026-11-21 — PhiveAlpha Phase 1K (lokal)
+
+Menghubungkan history OHLCV Phase 1J dengan Liquid Universe dan News-Driven Scoring. Snapshot mencatat cutoff, kualitas, alasan eligibility, breakdown faktor, dan ranking deterministik maksimum lima. Endpoint read-only memakai fixture default, dengan PostgreSQL development opt-in. Maven offline 94 lulus dan satu skip. Tes in-process memeriksa kegagalan baca tanpa fallback, dan runner PostgreSQL terisolasi tertahan probe socket. Tidak ada API live, order, perubahan produksi, deployment, commit atau push. [Handoff Phase 1K](phivealpha-phase-1k.md)

@@ -91,11 +91,15 @@ public class LiquidUniverseService {
 
     /** Returns the exact EOD query window, or an empty list when calendar coverage is insufficient. */
     public List<LocalDate> priceWindow(CalendarReference reference, Instant cutoff) {
+        return priceWindow(reference, cutoff, policy.lookbackSessions());
+    }
+
+    List<LocalDate> priceWindow(CalendarReference reference, Instant cutoff, int sessions) {
         if (reference.availableAt().isAfter(cutoff)) {
             return List.of();
         }
         var issues = new ArrayList<Issue>();
-        var dates = closedDates(reference.calendar(), cutoff, policy.lookbackSessions(), issues);
+        var dates = closedDates(reference.calendar(), cutoff, sessions, issues);
         return issues.isEmpty() ? List.copyOf(dates) : List.of();
     }
 
@@ -251,7 +255,7 @@ public class LiquidUniverseService {
         }
     }
 
-    private static Reason candleIssue(DailyPrice price, LocalDate listedOn, Instant sessionClose) {
+    static Reason candleIssue(DailyPrice price, LocalDate listedOn, Instant sessionClose) {
         if (price.observedAt() == null || price.ingestedAt() == null
                 || price.observedAt().toInstant().isBefore(sessionClose) || price.ingestedAt().isBefore(price.observedAt())) {
             return INVALID_PRICE_AVAILABILITY;

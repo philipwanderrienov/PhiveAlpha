@@ -16,6 +16,11 @@ case ${1:-} in
         database=phivealpha_dev_daily_it
         test_class=IdxDailyIngestionIT
         ;;
+    --stock-screener)
+        shift
+        database=phivealpha_dev_screener_it
+        test_class=StockScreenerIT
+        ;;
 esac
 
 if [[ $EUID == 0 ]]; then
@@ -60,7 +65,7 @@ unset PGHOST PGHOSTADDR PGPORT PGDATABASE PGUSER PGPASSWORD PGSERVICE PGSERVICEF
 psql=("$pg_bin/psql" -X --host="$sandbox_dir/socket" --port="$port" --username="$database" -v ON_ERROR_STOP=1)
 "${psql[@]}" --dbname=postgres -c "CREATE DATABASE $database"
 "${psql[@]}" --dbname="$database" -f "$repo_dir/backend/src/main/resources/phivealpha/sql/001-idx.sql"
-if [[ $test_class == IdxDailyIngestionIT ]]; then
+if [[ $test_class == IdxDailyIngestionIT || $test_class == StockScreenerIT ]]; then
     "${psql[@]}" --dbname="$database" -f "$repo_dir/backend/src/main/resources/phivealpha/sql/002-daily-optional-turnover.sql"
 fi
 # The test verifies the exact data directory before running any writes.

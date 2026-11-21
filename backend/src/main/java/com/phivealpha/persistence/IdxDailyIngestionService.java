@@ -180,9 +180,17 @@ public class IdxDailyIngestionService {
     public Mono<Evaluation> evaluate(Reference universe, CalendarReference calendar, Instant cutoff) {
         return Mono.defer(() -> {
             var window = screening.priceWindow(calendar, cutoff);
-            if (window.isEmpty() || universe.availableAt().isAfter(cutoff)
+            return screeningHistory(universe, calendar, window, cutoff).collectList()
+                    .map(prices -> screening.evaluate(universe, calendar, prices, cutoff));
+        });
+    }
+
+    public Flux<DailyPrice> screeningHistory(Reference universe, CalendarReference calendar,
+                                            List<LocalDate> window, Instant cutoff) {
+        return Flux.defer(() -> {
+            if (window.isEmpty() || universe.availableAt().isAfter(cutoff) || calendar.availableAt().isAfter(cutoff)
                     || Duration.between(universe.asOf(), cutoff).compareTo(screening.policy().maxReferenceAge()) > 0) {
-                return Mono.just(screening.evaluate(universe, calendar, List.of(), cutoff));
+                return Flux.empty();
             }
             var prefix = sourcePrefix(calendar);
             return Flux.fromIterable(universe.members()).map(member -> member.symbol()).distinct()
@@ -191,8 +199,7 @@ public class IdxDailyIngestionService {
                     .filter(price -> price.source().startsWith(prefix))
                     .map(price -> new DailyPrice(price.symbol(), price.tradingDate(), price.open(), price.high(),
                             price.low(), price.close(), price.volume(), price.turnover(), prefix,
-                            price.observedAt(), price.ingestedAt(), price.adjustmentStatus()))
-                    .collectList().map(prices -> screening.evaluate(universe, calendar, prices, cutoff));
+                            price.observedAt(), price.ingestedAt(), price.adjustmentStatus()));
         });
     }
 

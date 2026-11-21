@@ -1,3 +1,7 @@
+## 2026-11-21 — PhiveAlpha Phase 1K (lokal)
+
+Stock Screener menghubungkan history Phase 1J, Liquid Universe, dan News-Driven Scoring pada cutoff yang sama. Endpoint GET `/api/idx/v1/stock-screener` menyajikan fixture secara default dan menyediakan opt-in pembacaan fixture historis di PostgreSQL development. Snapshot mencatat eligibility, alasan, faktor, dan provenance dengan ranking riset maksimum lima. Maven offline 94 lulus dan satu skip loopback. Runner PostgreSQL sementara tersedia, tetapi sandbox menolak socket. [Handoff Phase 1K](phivealpha-phase-1k.md)
+
 ## 2026-11-21 — PhiveAlpha Phase 1J (lokal)
 
 Pipeline internal OHLCV harian memvalidasi fixture terhadap kalender BEI berversi, menyimpan candle melalui profil persistence development, dan memasok harga unadjusted ke screening berdasarkan cutoff dan lookback sesi. Adapter Daily HTTP tetap unverified untuk write. Maven offline CI mencatat 86 tes lulus dan satu skip. SQL PostgreSQL 17 single-user lulus untuk turnover opsional, idempotensi dan cutoff. Runner R2DBC tertahan izin socket. [Handoff Phase 1J](phivealpha-phase-1j.md)
