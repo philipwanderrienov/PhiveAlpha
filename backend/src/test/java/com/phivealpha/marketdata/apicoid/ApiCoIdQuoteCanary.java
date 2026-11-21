@@ -25,7 +25,7 @@ import tools.jackson.databind.json.JsonMapper;
 public final class ApiCoIdQuoteCanary {
     private static final String SYMBOL = "BBCA";
     private static final String SCOPE = "GET https://use.api.co.id/idx/v2/chart/quote/BBCA";
-    private static final List<String> CI_MARKERS = List.of("CI", "CONTINUOUS_INTEGRATION",
+    static final List<String> CI_MARKERS = List.of("CI", "CONTINUOUS_INTEGRATION",
             "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL", "BUILD_BUILDID", "TF_BUILD",
             "CIRCLECI", "BUILDKITE", "TEAMCITY_VERSION", "TRAVIS", "BITBUCKET_BUILD_NUMBER", "CODEBUILD_BUILD_ID");
     private static final List<String> QUOTE_FIELDS = List.of(
@@ -51,14 +51,15 @@ public final class ApiCoIdQuoteCanary {
         try {
             var clock = Clock.systemUTC();
             long maxAgeSeconds = checkApproval(env.get("PHIVEALPHA_CANARY_APPROVAL_PATH"), clock.instant());
+            var access = ApiCoIdAccess.load(env.get("PHIVEALPHA_API_APPROVAL_PATH"),
+                    env.get("PHIVEALPHA_API_QUOTA_LEDGER_PATH"), clock);
+            access.check(ApiCoIdAccess.Dataset.QUOTE);
             var settings = settings(env.get("API_CO_ID_CALENDAR_PATH"), Duration.ofSeconds(maxAgeSeconds));
             var calendar = ApiCoIdConfiguration.readCalendar(settings.calendarPath());
             // Use a known logging backend with no appenders or wire logging for this standalone process.
-            var logging = (LoggerContext) LoggerFactory.getILoggerFactory();
-            logging.reset();
-            logging.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.OFF);
+            disableLogging();
             var client = ApiCoIdConfiguration.client(settings, env.get("API_CO_ID_KEY"));
-            report = fetch(client, settings, clock, calendar);
+            report = fetch(client, settings, clock, calendar, access);
         } catch (IOException | RuntimeException rejected) {
             System.err.println("Canary stopped. Check approval, calendar, credential configuration and local runtime.");
             return 2;
@@ -71,7 +72,17 @@ public final class ApiCoIdQuoteCanary {
         };
     }
 
+    static void disableLogging() {
+        var logging = (LoggerContext) LoggerFactory.getILoggerFactory();
+        logging.reset();
+        logging.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.OFF);
+    }
+
     static long checkApproval(String location, Instant now) throws IOException {
+        return checkApproval(location, now, SCOPE, false);
+    }
+
+    static long checkApproval(String location, Instant now, String scope, boolean freeOnly) throws IOException {
         if (location == null || !Path.of(location).isAbsolute() || !Files.isRegularFile(Path.of(location))) {
             throw new IllegalArgumentException("Missing local canary approval");
         }
@@ -83,7 +94,8 @@ public final class ApiCoIdQuoteCanary {
             }
             approval.load(new java.io.ByteArrayInputStream(bytes));
         }
-        if (!SCOPE.equals(approval.getProperty("scope"))
+        if (!scope.equals(approval.getProperty("scope"))
+                || (freeOnly && !"true".equals(approval.getProperty("free-confirmed")))
                 || !"true".equals(approval.getProperty("entitlement-confirmed"))
                 || !"true".equals(approval.getProperty("single-request-approved"))
                 || !hasReference(approval, "entitlement-reference")
@@ -112,11 +124,16 @@ public final class ApiCoIdQuoteCanary {
 
     static Report fetch(WebClient.Builder client, ApiCoIdSettings settings, Clock clock,
                         VersionedIdxCalendar calendar) {
+        return fetch(client, settings, clock, calendar, null);
+    }
+
+    private static Report fetch(WebClient.Builder client, ApiCoIdSettings settings, Clock clock,
+                                VersionedIdxCalendar calendar, ApiCoIdAccess access) {
         var httpStatus = new AtomicInteger();
         var fields = new AtomicReference<Map<String, Boolean>>(Map.of());
         var transport = new ApiCoIdTransport(client.filter((request, next) -> next.exchange(request)
                 .doOnNext(response -> httpStatus.set(response.statusCode().value()))).build(), settings, clock,
-                json -> fields.set(fieldPresence(json)));
+                json -> fields.set(fieldPresence(json)), access);
         var provider = new ApiCoIdHttpProvider(settings, transport, clock, calendar);
         long start = System.nanoTime();
         var snapshot = provider.marketQuote(SYMBOL).block();

@@ -1,33 +1,7 @@
-# Architecture
+# Arsitektur PhiveAlpha
 
-## Target flow
+Angular meminta snapshot IDX melalui Spring WebFlux. Provider fixture memasok data untuk Overview, Weekly Top 5, Stock Analysis, News Intelligence dan estimasi Paper Trading. Seluruh rute aplikasi memakai HTTP GET.
 
-```text
-Binance / other exchange WebSocket
-              ↓
-      Market Data Collector
-              ↓
-   Technical Feature Engine
-              ↓
- PostgreSQL/TimescaleDB + Redis
-              ↓
-      Market Context Builder
-        ↙            ↘
- News Context       Market Context
-        ↘            ↙
-         AI Analysis Engine
-                ↓
-       Signal / Risk Engine
-                ↓
- Spring Boot REST + WebSocket
-                ↓
-      Angular Dashboard
-```
+Engine riset memakai kalender sesi dan data as-of untuk pemeringkatan likuiditas, scoring berita dan replay sintetis. PostgreSQL R2DBC tersedia melalui profil development opt-in, dengan migrasi manual berskema `phivealpha_idx`. Akses data HTTP opt-in memakai entitlement per produk, ledger quota dan audit.
 
-## Design principles
-
-1. AI is a reasoning layer, not the source of raw market data.
-2. Indicators and features are calculated deterministically before AI analysis.
-3. AI providers are interchangeable through an adapter interface.
-4. Realtime price updates do not invoke AI on every tick.
-5. Every AI analysis should be persisted so its later accuracy can be measured.
+[Status implementasi](../development/current-state.md)

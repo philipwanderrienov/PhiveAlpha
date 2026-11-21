@@ -1,68 +1,28 @@
-# CoinMind AI
+# PhiveAlpha
 
-AI-assisted cryptocurrency market intelligence and trade-advisor platform focused initially on BTC, ETH, and SOL. CoinMind provides recommendations and decision support; it does not execute exchange orders.
+Advisor riset swing trading saham IDX. Mode fixture menyediakan snapshot IDX, Weekly Top 5, analisis saham, berita sintetis dan estimasi nilai lot untuk simulasi.
 
-## Architecture
+## Development lokal
 
-- **Backend:** Java + Spring Boot
-- **Realtime:** Spring WebFlux + WebSocket
-- **Frontend:** Angular + RxJS
-- **Market charts:** TradingView Lightweight Charts
-- **Database:** PostgreSQL + TimescaleDB
-- **Cache / event stream:** Redis
-- **Deployment:** Docker Compose + Nginx
-- **Server:** Ubuntu Server (headless / no GUI required)
+Gunakan Java 25, Maven dan Node yang didukung Angular 22 (misalnya 22.23.2 atau 24.15+ pada seri 24).
 
-## Repository Structure
-
-```text
-CoinMind-AI/
-├── backend/          # Java / Spring Boot application
-├── frontend/         # Angular realtime dashboard
-├── infrastructure/   # Docker, database, nginx and deployment config
-├── docs/             # Architecture and API documentation
-├── .env.example
-├── .gitignore
-├── docker-compose.yml
-└── README.md
+```bash
+mvn -f backend/pom.xml clean verify
+java -jar backend/target/phivealpha/phivealpha-backend.jar
 ```
 
-## Initial Scope
+Di terminal lain:
 
-Market coverage:
-- BTC/USDT
-- ETH/USDT
-- SOL/USDT
-
-Core pipeline:
-
-```text
-Exchange WebSocket
-      ↓
-Market Data Collector
-      ↓
-Technical / Feature Engine
-      ↓
-PostgreSQL + TimescaleDB / Redis
-      ↓
-AI Analysis Engine
-      ↓
-Spring Boot API + WebSocket
-      ↓
-Angular Realtime Dashboard
+```bash
+cd frontend
+npm ci
+npm test
+npm run build
+npm start
 ```
 
-> Scope: advisor / decision-support only. BUY/SELL/WATCH outputs are recommendations, not automatic order execution.
+Buka `http://127.0.0.1:4282`. Dev server meneruskan `/api/idx/v1/**` ke backend di `127.0.0.1:8182`. Build Angular ada di `frontend/dist/phivealpha/browser`. Mode fixture berjalan tanpa kredensial atau database.
 
-> Status: active development.
-
-
-## Current Development Handoff
-
-For the latest implementation state, UI decisions, deployment commands, open issues, and continuation notes, read:
-
-```text
-docs/development/current-state.md
-```
-
-This file should be checked first when continuing CoinMind development in a new conversation.
+- [Backend dan profil development](backend/README.md)
+- [Frontend](frontend/README.md)
+- [Status dan riwayat migrasi](docs/development/current-state.md)

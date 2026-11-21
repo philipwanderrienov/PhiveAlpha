@@ -1,5 +1,7 @@
 # CoinMind AI — Ubuntu Server MVP Setup
 
+> Arsip operasi CoinMind. Jalur build dan runbook lokal PhiveAlpha ada di [Phase 1I](../development/phivealpha-phase-1i.md).
+
 For the MVP, CoinMind AI runs as native Linux services. Docker is intentionally **not required**.
 
 ## Target server

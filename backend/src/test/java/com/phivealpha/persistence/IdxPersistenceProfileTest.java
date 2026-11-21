@@ -2,7 +2,6 @@ package com.phivealpha.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.coinmind.CoinMindApplication;
 import com.phivealpha.PhiveAlphaApplication;
 import com.phivealpha.marketdata.ApiCoIdProvider;
 import com.phivealpha.marketdata.FixtureApiCoIdProvider;
@@ -29,7 +28,6 @@ class IdxPersistenceProfileTest {
         assertThat(context.getBeansOfType(ConnectionFactory.class)).hasSize(1);
         assertThat(context.getBeansOfType(IdxPersistenceService.class)).hasSize(1);
         assertThat(context.getBean(ApiCoIdProvider.class)).isInstanceOf(FixtureApiCoIdProvider.class);
-        assertThat(context.getBeansOfType(CoinMindApplication.class)).isEmpty();
         assertThat(context.getBeansOfType(ScheduledAnnotationBeanPostProcessor.class)).isEmpty();
         assertThat(context.getEnvironment().getProperty("spring.sql.init.mode")).isEqualTo("never");
         assertThat(context.getEnvironment().getProperty("coinmind.ai.enabled")).isNull();

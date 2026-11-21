@@ -4,6 +4,7 @@ import static com.phivealpha.marketdata.apicoid.ApiCoIdData.Quality.UNAVAILABLE;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,14 +22,14 @@ final class ApiCoIdRequestGate {
     private Instant throttledUntil = Instant.MIN;
     private Instant openUntil;
 
-    record Ticket(long generation, boolean probe, int number) {}
+    record Ticket(long generation, boolean probe, int number, ApiCoIdQuotaLedger.Reservation reservation) {}
 
     ApiCoIdRequestGate(ApiCoIdSettings settings, Clock clock) {
         this.settings = settings;
         this.clock = clock;
     }
 
-    synchronized Ticket acquire() {
+    synchronized Ticket acquire(Supplier<ApiCoIdQuotaLedger.Reservation> reserve) {
         var now = clock.instant();
         if (credentialsBlocked) {
             throw blocked("CREDENTIALS_OR_ENTITLEMENT_BLOCKED");
@@ -48,13 +49,14 @@ final class ApiCoIdRequestGate {
         if (now.isBefore(nextRequest)) {
             throw blocked("LOCAL_RATE_LIMIT");
         }
+        var reservation = reserve.get();
         probeActive = openUntil != null;
         nextRequest = now.plus(settings.minRequestInterval());
         active++;
-        return new Ticket(generation, probeActive, ++used);
+        return new Ticket(generation, probeActive, ++used, reservation);
     }
 
-    synchronized void finish(Ticket ticket, ApiCoIdEndpoint endpoint, int status, String outcome,
+    synchronized void finish(Ticket ticket, ApiCoIdAccess.Dataset endpoint, int status, String outcome,
                              boolean transientError, Instant retryAfter) {
         active--;
         var now = clock.instant();

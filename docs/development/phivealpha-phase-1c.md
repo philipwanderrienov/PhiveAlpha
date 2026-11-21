@@ -63,21 +63,21 @@ COMMIT;
 ## Menjalankan development
 
 ```bash
-mvn -f backend/pom.xml -Pphivealpha -DskipTests package
-java -jar backend/target/phivealpha-backend.jar
+mvn -f backend/pom.xml -DskipTests package
+java -jar backend/target/phivealpha/phivealpha-backend.jar
 # Pada terminal kedua, gunakan Node 22
 cd frontend
-npm run start:phivealpha
+npm start
 ```
 
-Mode fixture membuka backend loopback port 8182. Untuk mengaktifkan persistence, set `PHIVEALPHA_R2DBC_URL` (format `r2dbc:postgresql://HOST:PORT/DB`), `PHIVEALPHA_R2DBC_USERNAME`, dan `PHIVEALPHA_R2DBC_PASSWORD` dari konfigurasi privat development. Setelah migrasi manual, jalankan `java -jar backend/target/phivealpha-backend.jar --spring.profiles.active=phivealpha-persistence`. Spring SQL initialization tetap `never`. Bean database tersedia untuk caller internal dan endpoint fixture tetap memakai fixture.
+Mode fixture membuka backend loopback port 8182. Untuk mengaktifkan persistence, set `PHIVEALPHA_R2DBC_URL` (format `r2dbc:postgresql://HOST:PORT/DB`), `PHIVEALPHA_R2DBC_USERNAME`, dan `PHIVEALPHA_R2DBC_PASSWORD` dari konfigurasi privat development. Setelah migrasi manual, jalankan `java -jar backend/target/phivealpha/phivealpha-backend.jar --spring.profiles.active=phivealpha-persistence`. Spring SQL initialization tetap `never`. Bean database tersedia untuk caller internal dan endpoint fixture tetap memakai fixture.
 
 ## Verifikasi
 
 | Pemeriksaan | Hasil |
 | --- | --- |
 | `mvn -f backend/pom.xml test` | **PASS** dengan Mockito Java agent. 220 tes lulus, 0 gagal/error/skip. Termasuk 4 unit validasi IDX, 5 tes fixture dan endpoint, serta 1 tes konteks profil. Percobaan tanpa agent gagal karena sandbox menolak self-attach Mockito. |
-| `mvn -f backend/pom.xml -Pphivealpha -DskipTests package` | **PASS**. |
+| `mvn -f backend/pom.xml -DskipTests package` | **PASS**. |
 | `mvn -f backend/pom.xml -DskipTests package` | **PASS** untuk CoinMind. |
 | `npm run build:phivealpha` dan `npm run build` | **PASS** dengan Node 22. CoinMind masih menghasilkan peringatan template yang sudah ada. |
 | DDL dan rollback PostgreSQL 17.11 | **PASS** dalam mode single-user dengan direktori sementara di `/tmp`, tanpa socket. DDL menghasilkan 6 tabel. Rollback menghapus schema. |

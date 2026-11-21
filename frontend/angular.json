@@ -3,61 +3,6 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "coinmind-web": {
-      "projectType": "application",
-      "root": "",
-      "sourceRoot": "src",
-      "prefix": "app",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-angular:application",
-          "options": {
-            "outputPath": "dist/coinmind-web",
-            "index": "src/index.html",
-            "browser": "src/main.ts",
-            "tsConfig": "tsconfig.app.json",
-            "assets": [
-              "src/favicon.svg",
-              "src/service-worker.js",
-              "src/manifest.webmanifest"
-            ],
-            "styles": [
-              "src/styles.css"
-            ]
-          },
-          "configurations": {
-            "production": {
-              "outputHashing": "all",
-              "optimization": {
-                "scripts": true,
-                "styles": true,
-                "fonts": false
-              }
-            },
-            "development": {
-              "optimization": false,
-              "sourceMap": true
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
-          "options": {
-            "proxyConfig": "proxy.conf.json"
-          },
-          "configurations": {
-            "development": {
-              "buildTarget": "coinmind-web:build:development"
-            },
-            "production": {
-              "buildTarget": "coinmind-web:build:production"
-            }
-          },
-          "defaultConfiguration": "development"
-        }
-      }
-    },
     "phivealpha": {
       "projectType": "application",
       "root": "",
@@ -71,7 +16,9 @@
             "index": "src/phivealpha/index.html",
             "browser": "src/phivealpha/main.ts",
             "tsConfig": "tsconfig.phivealpha.json",
-            "styles": ["src/phivealpha/styles.css"]
+            "styles": [
+              "src/phivealpha/styles.css"
+            ]
           },
           "configurations": {
             "production": {

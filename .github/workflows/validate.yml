@@ -1,4 +1,4 @@
-name: CoinMind validation
+name: PhiveAlpha validation
 
 on:
   push:
@@ -29,7 +29,10 @@ jobs:
           node-version: '24'
       - name: Install dependencies
         working-directory: frontend
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+      - name: Frontend unit tests
+        working-directory: frontend
+        run: npm test
       - name: Angular production build
         working-directory: frontend
         run: npm run build

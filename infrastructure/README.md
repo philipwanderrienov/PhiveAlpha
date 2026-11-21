@@ -1,5 +1,7 @@
 # Infrastructure
 
+> Arsip operasi CoinMind. Jalur build dan runbook lokal PhiveAlpha ada di [Phase 1I](../docs/development/phivealpha-phase-1i.md).
+
 Deployment target: Ubuntu Server, headless.
 
 ```text

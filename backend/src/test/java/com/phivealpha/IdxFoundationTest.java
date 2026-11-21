@@ -1,9 +1,10 @@
 package com.phivealpha;
 
-import com.coinmind.CoinMindApplication;
 import com.phivealpha.marketdata.ApiCoIdProvider;
 import com.phivealpha.marketdata.FixtureApiCoIdProvider;
 import com.phivealpha.marketdata.apicoid.ApiCoIdHttpProvider;
+import com.phivealpha.marketdata.apicoid.ExchangeRateProvider;
+import com.phivealpha.marketdata.apicoid.IndonesiaHolidayCalendarProvider;
 import com.phivealpha.persistence.IdxPersistenceService;
 import com.phivealpha.screening.LiquidUniverseService;
 import com.phivealpha.screening.LiquidityPolicy;
@@ -42,6 +43,9 @@ class IdxFoundationTest {
     void isolatesFixtureFromLegacyApplicationAndDatabase() {
         assertThat(context.getBean(ApiCoIdProvider.class)).isInstanceOf(FixtureApiCoIdProvider.class);
         assertThat(context.getBeansOfType(ApiCoIdHttpProvider.class)).isEmpty();
+        assertThat(context.getBeansOfType(ExchangeRateProvider.class)).isEmpty();
+        assertThat(context.getBeansOfType(IndonesiaHolidayCalendarProvider.class)).isEmpty();
+        client.get().uri("/internal/developer/api-co-id").exchange().expectStatus().isNotFound();
         assertThat(context.getEnvironment().matchesProfiles("phivealpha-api-co-id")).isFalse();
         assertThat(context.getBeansOfType(ConnectionFactory.class)).isEmpty();
         assertThat(context.getBeansOfType(IdxPersistenceService.class)).isEmpty();
@@ -51,7 +55,8 @@ class IdxFoundationTest {
         assertThat(policy.minDailyVolumeShares()).isEqualTo(250_000);
         assertThat(context.getBeansOfType(NewsDrivenScoringService.class)).hasSize(1);
         assertThat(context.getBean(NewsScoringPolicy.class).newsWeight()).isEqualByComparingTo("40");
-        assertThat(context.getBeansOfType(CoinMindApplication.class)).isEmpty();
+        assertThat(context.getClassLoader().getResource("com/coinmind/CoinMindApplication.class")).isNull();
+        assertThat(context.getEnvironment().getProperty("spring.application.name")).isEqualTo("PhiveAlpha");
         assertThat(context.getBeansOfType(ScheduledAnnotationBeanPostProcessor.class)).isEmpty();
         assertThat(context.getEnvironment().getProperty("spring.sql.init.mode")).isEqualTo("never");
         assertThat(context.getEnvironment().getProperty("coinmind.ai.enabled")).isNull();

@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
@@ -17,16 +19,23 @@ import tools.jackson.databind.json.JsonMapper;
 @Configuration(proxyBeanMethods = false)
 @Profile("phivealpha-api-co-id")
 @EnableConfigurationProperties(ApiCoIdSettings.class)
+@Import(ApiCoIdRuntimeConfiguration.class)
 class ApiCoIdConfiguration {
     @Bean
-    ApiCoIdHttpProvider apiCoIdHttpProvider(ApiCoIdSettings settings, @Value("${API_CO_ID_KEY}") String apiKey) {
+    ApiCoIdHttpProvider apiCoIdHttpProvider(ApiCoIdSettings settings, @Value("${API_CO_ID_KEY}") String apiKey,
+                                           ApiCoIdAccess access, ApiCoIdDiagnostics diagnostics, ObjectProvider<ApiCoIdAuditWriter> audit) {
+        rejectCi();
+        var calendar = readCalendar(settings.calendarPath());
+        var clock = Clock.systemUTC();
+        var transport = new ApiCoIdTransport(client(settings, apiKey).build(), settings, clock, ignored -> {},
+                access.restrictedToFree(ApiCoIdRuntimeConfiguration.FREE_IDX), audit.getIfAvailable());
+        return new ApiCoIdHttpProvider(settings, transport, clock, calendar, diagnostics);
+    }
+
+    static void rejectCi() {
         if ("true".equalsIgnoreCase(System.getenv("CI")) || "true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"))) {
             throw new IllegalStateException("The API.co.id network profile is disabled in CI");
         }
-        var calendar = readCalendar(settings.calendarPath());
-        var clock = Clock.systemUTC();
-        return new ApiCoIdHttpProvider(settings, new ApiCoIdTransport(client(settings, apiKey).build(), settings, clock),
-                clock, calendar);
     }
 
     static WebClient.Builder client(ApiCoIdSettings settings, String apiKey) {

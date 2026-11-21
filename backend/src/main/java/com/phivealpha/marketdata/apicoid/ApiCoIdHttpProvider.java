@@ -43,6 +43,7 @@ public final class ApiCoIdHttpProvider implements ApiCoIdProvider {
 
     private final ApiCoIdSettings settings;
     private final ApiCoIdTransport transport;
+    private final ApiCoIdDiagnostics diagnostics;
     private final Clock clock;
     private final VersionedIdxCalendar calendar;
     private final LinkedHashMap<Request, Batch> cache = new LinkedHashMap<>(16, 0.75f, true);
@@ -50,6 +51,12 @@ public final class ApiCoIdHttpProvider implements ApiCoIdProvider {
 
     ApiCoIdHttpProvider(ApiCoIdSettings settings, ApiCoIdTransport transport, Clock clock,
                         VersionedIdxCalendar calendar) {
+        this(settings, transport, clock, calendar, null);
+    }
+
+    ApiCoIdHttpProvider(ApiCoIdSettings settings, ApiCoIdTransport transport, Clock clock,
+                        VersionedIdxCalendar calendar, ApiCoIdDiagnostics diagnostics) {
+        this.diagnostics = diagnostics;
         this.settings = settings;
         this.transport = transport;
         this.clock = clock;
@@ -109,13 +116,23 @@ public final class ApiCoIdHttpProvider implements ApiCoIdProvider {
 
     private <T> Mono<Snapshot<T>> dataset(Request request, Class<T> type) {
         return Mono.defer(() -> {
+            transport.check(ApiCoIdTransport.datasetFor(request.endpoint(), request.symbol() == null));
             preflight(request);
             return cached(request).map(batch -> snapshot(request, type, batch));
         }).onErrorResume(ApiCoIdFailure.class, error ->
                 Mono.just(new Snapshot<>(error.quality, error.reason, List.<T>of(), provenance(request, null))))
-          .doOnNext(result -> LOG.info("API.co.id quality dataset={} quality={} reason={} rows={} asOf={} fetchedAt={}",
+          .doOnNext(result -> {
+              if (diagnostics != null) {
+                  var provenance = result.provenance();
+                  diagnostics.record(ApiCoIdTransport.datasetFor(request.endpoint(), request.symbol() == null),
+                          result.quality().name(), provenance.asOf(), provenance.fetchedAt(), provenance.ageAnchor(),
+                          provenance.universeVersion() == null ? provenance.calendarVersion() : provenance.universeVersion(),
+                          provenance.fetchedAt() != null);
+              }
+              LOG.info("API.co.id quality dataset={} quality={} reason={} rows={} asOf={} fetchedAt={}",
                   request.endpoint(), result.quality(), result.reason(), result.rows().size(),
-                  result.provenance().asOf(), result.provenance().fetchedAt()));
+                  result.provenance().asOf(), result.provenance().fetchedAt());
+          });
     }
 
     private void preflight(Request request) {

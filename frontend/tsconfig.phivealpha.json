@@ -1,4 +1,9 @@
 {
-  "extends": "./tsconfig.app.json",
-  "files": ["src/phivealpha/main.ts"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/phivealpha",
+    "types": []
+  },
+  "files": ["src/phivealpha/main.ts"],
+  "include": ["src/phivealpha/**/*.d.ts"]
 }

@@ -890,3 +890,15 @@ Menambahkan scoring research-only lima faktor di atas hasil LiquidUniverse, deng
 ## 2026-11-20 — PhiveAlpha Phase 1G (lokal)
 
 Menambahkan historical replay sintetis dengan vintage point-in-time, guard first-seen, asumsi biaya, benchmark berlabel, dan metrik per partisi/horizon. Embargo dan purge label mencegah exit melampaui batas partisi. Fixture mencakup berita/revisi terlambat, delisting/suspensi, hari libur, lot, corporate action, dan posisi unresolved. Maven offline 271 lulus dengan satu skip connector Phase 1D.2 akibat sandbox. Kedua paket backend, unit frontend, dan build Angular lulus. Endpoint fixture berjalan seperti sebelumnya. Tidak ada provider live, database production, deploy, restart, sinyal, commit, atau push. [Handoff Phase 1G](phivealpha-phase-1g.md)
+
+## 2026-11-20 — PhiveAlpha Phase 1H (lokal)
+
+Baseline `3e96542`. Menambahkan adapter USD/IDR dan kalender nasional, reuse transport IDX dengan manifest akses Free dan jurnal durable, status developer privat, mirror metadata opsional Phase 1C, serta canary Daily BBCA. Entitlement akun vendor tetap unverified. Maven offline 287 lulus dan satu uji socket lama dilewati karena sandbox. Kedua paket backend, unit frontend dan kedua build Angular lulus. Tidak ada request live, eksekusi canary, sinyal, perubahan produksi/DB, commit, atau push. [Handoff Phase 1H](phivealpha-phase-1h.md)
+
+## 2026-11-21 — PhiveAlpha Phase 1I (lokal)
+
+Build default Maven dan Angular sekarang menerbitkan PhiveAlpha IDX. Package, resource dan aset crypto dikeluarkan dari distribusi. Sumber legacy tetap tersedia untuk pemulihan dan dokumen aktif memakai runbook PhiveAlpha. Baseline Maven 287 lulus dan 1 skip. Setelah isolasi, Maven CI dan lokal masing-masing 77 lulus dan 1 skip. JAR fixture berhasil startup tanpa HTTP, lima unit frontend dan build Angular lulus. Uji HTTP/browser dan PostgreSQL tertahan izin loopback. Perubahan Phase 1H terjaga. Tidak ada perubahan production, request live, order, commit atau push. [Handoff Phase 1I](phivealpha-phase-1i.md)
+
+## 2026-11-21 — PhiveAlpha Phase 1H SIT-02B (lokal)
+
+Menambah jalur SIT PostgreSQL 17 terisolasi untuk mirror metadata dan regresi in-process saat koneksi audit gagal. Warning memuat dataset, UUID reservasi, hasil transport dan tipe error. Maven offline 78 lulus dan 1 skip. PostgreSQL single-user menyimpan metadata dan menolak insert yang disimulasikan. Runner audit dan regresi Phase 1C terhalang socket sandbox sebelum membuat klaster. Tidak ada request live, koneksi produksi, deployment, order, commit atau push. [Handoff SIT-02B](phivealpha-sit-02b.md)

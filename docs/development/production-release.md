@@ -1,5 +1,7 @@
 # Phase 1.5 production release runbook
 
+> Arsip operasi CoinMind. Jalur build dan runbook lokal PhiveAlpha ada di [Phase 1I](phivealpha-phase-1i.md).
+
 Status: prepared locally, NOT deployed. Existing service, environment, web root and ledger were not changed. Activation requires separate explicit operator authorization. Main only; no automatic git operations. Existing dirty work must be reviewed and synchronized separately before a real release.
 
 ## Audit and layout

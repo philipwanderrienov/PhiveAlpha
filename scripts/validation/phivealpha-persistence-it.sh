@@ -3,8 +3,21 @@ set -euo pipefail
 
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 pg_bin=${PHIVEALPHA_TEST_PG_BIN:-/usr/lib/postgresql/17/bin}
+database=phivealpha_it
+test_class=IdxPersistenceIT
+if [[ ${1:-} == --audit-mirror ]]; then
+    shift
+    database=phivealpha_dev_audit_it
+    test_class=ApiCoIdAuditMirrorIT
+fi
+
 if [[ $EUID == 0 ]]; then
     echo "Run as an unprivileged user." >&2
+    exit 1
+fi
+
+if [[ $("$pg_bin/pg_ctl" --version) != "pg_ctl (PostgreSQL) 17."* ]]; then
+    echo "PostgreSQL 17 is required." >&2
     exit 1
 fi
 
@@ -29,7 +42,7 @@ umask 077
 mkdir "$sandbox_dir/socket"
 password=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
 printf '%s\n' "$password" > "$sandbox_dir/password"
-"$pg_bin/initdb" -D "$sandbox_dir/data" --username=phivealpha_it --pwfile="$sandbox_dir/password" \
+"$pg_bin/initdb" -D "$sandbox_dir/data" --username="$database" --pwfile="$sandbox_dir/password" \
     --auth-local=trust --auth-host=scram-sha-256 --no-locale --encoding=UTF8
 rm -- "$sandbox_dir/password"
 "$pg_bin/pg_ctl" -D "$sandbox_dir/data" -l "$sandbox_dir/postgres.log" \
@@ -37,12 +50,12 @@ rm -- "$sandbox_dir/password"
 
 # All administrative SQL uses the private Unix socket of the cluster created above.
 unset PGHOST PGHOSTADDR PGPORT PGDATABASE PGUSER PGPASSWORD PGSERVICE PGSERVICEFILE PGOPTIONS
-psql=("$pg_bin/psql" -X --host="$sandbox_dir/socket" --port="$port" --username=phivealpha_it -v ON_ERROR_STOP=1)
-"${psql[@]}" --dbname=postgres -c 'CREATE DATABASE phivealpha_it'
-"${psql[@]}" --dbname=phivealpha_it -f "$repo_dir/backend/src/main/resources/phivealpha/sql/001-idx.sql"
+psql=("$pg_bin/psql" -X --host="$sandbox_dir/socket" --port="$port" --username="$database" -v ON_ERROR_STOP=1)
+"${psql[@]}" --dbname=postgres -c "CREATE DATABASE $database"
+"${psql[@]}" --dbname="$database" -f "$repo_dir/backend/src/main/resources/phivealpha/sql/001-idx.sql"
 # The test verifies the exact data directory before running any writes.
 PHIVEALPHA_IT_DATA_DIR="$sandbox_dir/data" \
-PHIVEALPHA_R2DBC_URL="r2dbc:postgresql://127.0.0.1:$port/phivealpha_it" \
-PHIVEALPHA_R2DBC_USERNAME=phivealpha_it \
+PHIVEALPHA_R2DBC_URL="r2dbc:postgresql://127.0.0.1:$port/$database" \
+PHIVEALPHA_R2DBC_USERNAME="$database" \
 PHIVEALPHA_R2DBC_PASSWORD="$password" \
-mvn -f "$repo_dir/backend/pom.xml" -Dtest=IdxPersistenceIT test "$@"
+mvn -f "$repo_dir/backend/pom.xml" -Dtest="$test_class" test "$@"
