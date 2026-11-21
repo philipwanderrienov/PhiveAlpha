@@ -5,6 +5,8 @@ import com.phivealpha.marketdata.FixtureApiCoIdProvider;
 import com.phivealpha.marketdata.apicoid.ApiCoIdHttpProvider;
 import com.phivealpha.marketdata.apicoid.ExchangeRateProvider;
 import com.phivealpha.marketdata.apicoid.IndonesiaHolidayCalendarProvider;
+import com.phivealpha.persistence.FixtureDailyOhlcvFeed;
+import com.phivealpha.persistence.IdxDailyIngestionService;
 import com.phivealpha.persistence.IdxPersistenceService;
 import com.phivealpha.screening.LiquidUniverseService;
 import com.phivealpha.screening.LiquidityPolicy;
@@ -49,6 +51,8 @@ class IdxFoundationTest {
         assertThat(context.getEnvironment().matchesProfiles("phivealpha-api-co-id")).isFalse();
         assertThat(context.getBeansOfType(ConnectionFactory.class)).isEmpty();
         assertThat(context.getBeansOfType(IdxPersistenceService.class)).isEmpty();
+        assertThat(context.getBeansOfType(IdxDailyIngestionService.class)).isEmpty();
+        assertThat(context.getBeansOfType(FixtureDailyOhlcvFeed.class)).hasSize(1);
         assertThat(context.getBeansOfType(LiquidUniverseService.class)).hasSize(1);
         var policy = context.getBean(LiquidityPolicy.class);
         assertThat(policy.lookbackSessions()).isEqualTo(20);

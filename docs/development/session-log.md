@@ -902,3 +902,7 @@ Build default Maven dan Angular sekarang menerbitkan PhiveAlpha IDX. Package, re
 ## 2026-11-21 — PhiveAlpha Phase 1H SIT-02B (lokal)
 
 Menambah jalur SIT PostgreSQL 17 terisolasi untuk mirror metadata dan regresi in-process saat koneksi audit gagal. Warning memuat dataset, UUID reservasi, hasil transport dan tipe error. Maven offline 78 lulus dan 1 skip. PostgreSQL single-user menyimpan metadata dan menolak insert yang disimulasikan. Runner audit dan regresi Phase 1C terhalang socket sandbox sebelum membuat klaster. Tidak ada request live, koneksi produksi, deployment, order, commit atau push. [Handoff SIT-02B](phivealpha-sit-02b.md)
+
+## 2026-11-21 — PhiveAlpha Phase 1J (lokal)
+
+Menambah ingestion OHLCV fixture dengan validasi sesi dan provenance, penulisan tanpa overwrite, turnover opsional, audit fixture dan jalur screening as-of. Baseline lokal 3f8940f. Maven offline CI 86 lulus dan satu skip. SQL PostgreSQL 17 single-user lulus dan artefak PhiveAlpha bebas kelas serta resource CoinMind. Runner R2DBC tertahan probe socket. Tidak ada API live, transaksi, perubahan production, deployment, commit atau push. [Handoff Phase 1J](phivealpha-phase-1j.md)

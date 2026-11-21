@@ -68,7 +68,7 @@ public final class ApiCoIdQuoteCanary {
         System.out.println(JsonMapper.builder().build().writeValueAsString(report));
         return switch (report.quality()) {
             case UNVERIFIED, STALE -> 0;
-            case INCOMPLETE, UNAVAILABLE -> 1;
+            case COMPLETE, INCOMPLETE, UNAVAILABLE -> 1;
         };
     }
 
@@ -143,7 +143,7 @@ public final class ApiCoIdQuoteCanary {
         int status = httpStatus.get();
         String parser = switch (snapshot.quality()) {
             case UNAVAILABLE -> "NOT_RUN";
-            case INCOMPLETE -> "REJECTED";
+            case COMPLETE, INCOMPLETE -> "REJECTED";
             case STALE, UNVERIFIED -> "ACCEPTED";
         };
         return new Report(provenance.dataset(), SYMBOL, status == 0 ? null : status, elapsedMillis,

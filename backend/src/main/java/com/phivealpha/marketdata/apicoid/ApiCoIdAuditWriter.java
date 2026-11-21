@@ -1,12 +1,11 @@
 package com.phivealpha.marketdata.apicoid;
 
+import com.phivealpha.persistence.IdxDevelopmentDatabase;
 import com.phivealpha.persistence.IdxPersistenceService;
 import com.phivealpha.persistence.IdxRecords.Ingestion;
 import com.phivealpha.persistence.IdxRecords.IngestionStatus;
-import java.net.URI;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,19 +27,7 @@ final class ApiCoIdAuditWriter {
     }
 
     static void requireDevelopment(String url, String username) {
-        try {
-            if (url.startsWith("r2dbc:postgresql://") && username.matches("phivealpha_dev_[a-z0-9_]+")) {
-                var uri = URI.create(url.substring(6));
-                if (uri.getHost() != null && Set.of("127.0.0.1", "[::1]").contains(uri.getHost())
-                        && uri.getPort() > 0 && uri.getRawPath().matches("/phivealpha_dev_[a-z0-9_]+")
-                        && uri.getRawUserInfo() == null && uri.getRawQuery() == null && uri.getRawFragment() == null) {
-                    return;
-                }
-            }
-        } catch (RuntimeException ignored) {
-            // Keep connection details out of startup diagnostics.
-        }
-        throw new IllegalArgumentException("API.co.id audit requires an isolated PhiveAlpha development database");
+        IdxDevelopmentDatabase.requireIsolated(url, username);
     }
 
     Mono<Void> record(ApiCoIdQuotaLedger.Reservation reservation, String outcome, int budget) {

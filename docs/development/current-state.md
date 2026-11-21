@@ -1,3 +1,7 @@
+## 2026-11-21 — PhiveAlpha Phase 1J (lokal)
+
+Pipeline internal OHLCV harian memvalidasi fixture terhadap kalender BEI berversi, menyimpan candle melalui profil persistence development, dan memasok harga unadjusted ke screening berdasarkan cutoff dan lookback sesi. Adapter Daily HTTP tetap unverified untuk write. Maven offline CI mencatat 86 tes lulus dan satu skip. SQL PostgreSQL 17 single-user lulus untuk turnover opsional, idempotensi dan cutoff. Runner R2DBC tertahan izin socket. [Handoff Phase 1J](phivealpha-phase-1j.md)
+
 ## 2026-11-21 — PhiveAlpha Phase 1H SIT-02B (lokal)
 
 Runner PostgreSQL 17 mendukung mode audit dengan database dan role `phivealpha_dev_audit_it`. Tes end-to-end memeriksa metadata transport, ledger setelah restart komponen, dan kegagalan tulis. Warning audit kini memuat UUID reservasi. Maven 78 lulus dan 1 skip connector loopback. Regresi kegagalan storage in-process dan uji SQL PostgreSQL single-user lulus. SIT PostgreSQL R2DBC tertahan izin socket sandbox. Phase 1I sebelumnya lulus di host berdasarkan hasil yang dilaporkan pengguna. [Handoff SIT-02B](phivealpha-sit-02b.md)

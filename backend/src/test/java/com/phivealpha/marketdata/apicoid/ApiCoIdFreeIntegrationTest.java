@@ -277,6 +277,31 @@ class ApiCoIdFreeIntegrationTest {
     }
 
     @Test
+    void dailyProviderDoesNotUseNetworkAfterQuotaExhaustion() throws Exception {
+        var clock = new MutableClock();
+        var journal = journal();
+        var access = access(clock, journal, 1, Set.of(DAILY), Set.of(DAILY));
+        var hits = new AtomicInteger();
+        var settings = ApiCoIdDailyCanary.settings(null, Duration.ofMinutes(2));
+        var calendar = readCalendar();
+        var date = LocalDate.parse("2026-11-13");
+        var provider = new ApiCoIdHttpProvider(settings, transport(clock, access, hits,
+                () -> answer(200, """
+                    {"is_success":true,"data":{"data":[{"date":"2026-11-13","open":100,"high":110,
+                    "low":95,"close":101,"volume":1000}],
+                    "meta":{"count":1,"as_of":"2026-11-13T09:30:00Z","cursor":null}}}
+                    """), 0), clock, calendar);
+        assertThat(provider.dailyOhlcv("BBCA", date, date).block().quality())
+                .isEqualTo(ApiCoIdData.Quality.UNVERIFIED);
+
+        var restarted = access(clock, journal, 1, Set.of(DAILY), Set.of(DAILY));
+        var denied = new ApiCoIdHttpProvider(settings, transport(clock, restarted, hits,
+                () -> Mono.error(new AssertionError("HTTP must not be called")), 0), clock, calendar);
+        assertThat(denied.dailyOhlcv("BBCA", date, date).block().reason()).isEqualTo("PERSISTENT_BUDGET_EXHAUSTED");
+        assertThat(hits.get()).isEqualTo(1);
+    }
+
+    @Test
     void developerReportSeparatesVendorQuotaAndFixtureAndAuditRejectsProductionTargets() throws Exception {
         var clock = new MutableClock();
         var access = access(clock, journal(), 6, Set.of(USD_IDR), Set.of());

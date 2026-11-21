@@ -63,7 +63,7 @@ public class LiquidUniverseService {
         if (!calendarAvailable) {
             issues.add(new Issue(CALENDAR_NOT_AVAILABLE_AT_CUTOFF, null));
         }
-        var closedDates = issues.isEmpty() ? closedDates(calendar, cutoff, issues) : List.<LocalDate>of();
+        var closedDates = issues.isEmpty() ? closedDates(calendar, cutoff, Math.max(policy.lookbackSessions(), policy.minListingSessions()), issues) : List.<LocalDate>of();
         var calendarVersion = calendarAvailable ? calendar.version() : null;
         if (issues.isEmpty()) {
             int lookback = policy.lookbackSessions();
@@ -89,8 +89,18 @@ public class LiquidUniverseService {
                 calendarAvailable ? calendarReference.availableAt() : null, policy, issues, results);
     }
 
-    private List<LocalDate> closedDates(VersionedIdxCalendar calendar, Instant cutoff, List<Issue> issues) {
-        int needed = Math.max(policy.lookbackSessions(), policy.minListingSessions());
+    /** Returns the exact EOD query window, or an empty list when calendar coverage is insufficient. */
+    public List<LocalDate> priceWindow(CalendarReference reference, Instant cutoff) {
+        if (reference.availableAt().isAfter(cutoff)) {
+            return List.of();
+        }
+        var issues = new ArrayList<Issue>();
+        var dates = closedDates(reference.calendar(), cutoff, policy.lookbackSessions(), issues);
+        return issues.isEmpty() ? List.copyOf(dates) : List.of();
+    }
+
+    private static List<LocalDate> closedDates(VersionedIdxCalendar calendar, Instant cutoff,
+                                              int needed, List<Issue> issues) {
         var closed = new ArrayList<LocalDate>(needed);
         for (var day = cutoff.atZone(IdxMarketCalendar.ZONE).toLocalDate();
                 closed.size() < needed; day = day.minusDays(1)) {

@@ -55,15 +55,18 @@ public class IdxPersistenceService {
             chronological(price.observedAt(), price.ingestedAt());
             check(!price.tradingDate().isAfter(price.observedAt().atZoneSameInstant(IdxMarketCalendar.ZONE).toLocalDate()),
                     "Observation precedes trading date");
-            check(positive(price.open()) && positive(price.close()) && positive(price.low())
-                    && positive(price.high()) && price.high().compareTo(price.open().max(price.close())) >= 0
-                    && price.low().compareTo(price.open().min(price.close())) <= 0
-                    && price.volume() >= 0 && price.turnover() != null && price.turnover().signum() >= 0,
-                    "Invalid daily price values");
+            check(validDailyValues(price), "Invalid daily price values");
             return repository.insert(new DailyPrice(symbol, price.tradingDate(), price.open(), price.high(),
                     price.low(), price.close(), price.volume(), price.turnover(), price.source(),
                     price.observedAt(), price.ingestedAt(), price.adjustmentStatus())).map(count -> count == 1);
         }));
+    }
+
+    static boolean validDailyValues(DailyPrice price) {
+        return positive(price.open()) && positive(price.close()) && positive(price.low())
+                && positive(price.high()) && price.high().compareTo(price.open().max(price.close())) >= 0
+                && price.low().compareTo(price.open().min(price.close())) <= 0 && price.volume() >= 0
+                && (price.turnover() == null || price.turnover().signum() >= 0);
     }
 
     public Flux<DailyPrice> historicalPrices(String symbol, AdjustmentStatus basis, LocalDate from,

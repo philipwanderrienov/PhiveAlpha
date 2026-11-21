@@ -5,11 +5,18 @@ repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 pg_bin=${PHIVEALPHA_TEST_PG_BIN:-/usr/lib/postgresql/17/bin}
 database=phivealpha_it
 test_class=IdxPersistenceIT
-if [[ ${1:-} == --audit-mirror ]]; then
-    shift
-    database=phivealpha_dev_audit_it
-    test_class=ApiCoIdAuditMirrorIT
-fi
+case ${1:-} in
+    --audit-mirror)
+        shift
+        database=phivealpha_dev_audit_it
+        test_class=ApiCoIdAuditMirrorIT
+        ;;
+    --daily-ingestion)
+        shift
+        database=phivealpha_dev_daily_it
+        test_class=IdxDailyIngestionIT
+        ;;
+esac
 
 if [[ $EUID == 0 ]]; then
     echo "Run as an unprivileged user." >&2
@@ -53,6 +60,9 @@ unset PGHOST PGHOSTADDR PGPORT PGDATABASE PGUSER PGPASSWORD PGSERVICE PGSERVICEF
 psql=("$pg_bin/psql" -X --host="$sandbox_dir/socket" --port="$port" --username="$database" -v ON_ERROR_STOP=1)
 "${psql[@]}" --dbname=postgres -c "CREATE DATABASE $database"
 "${psql[@]}" --dbname="$database" -f "$repo_dir/backend/src/main/resources/phivealpha/sql/001-idx.sql"
+if [[ $test_class == IdxDailyIngestionIT ]]; then
+    "${psql[@]}" --dbname="$database" -f "$repo_dir/backend/src/main/resources/phivealpha/sql/002-daily-optional-turnover.sql"
+fi
 # The test verifies the exact data directory before running any writes.
 PHIVEALPHA_IT_DATA_DIR="$sandbox_dir/data" \
 PHIVEALPHA_R2DBC_URL="r2dbc:postgresql://127.0.0.1:$port/$database" \

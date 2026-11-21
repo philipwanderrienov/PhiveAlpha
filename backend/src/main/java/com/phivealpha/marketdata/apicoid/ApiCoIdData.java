@@ -10,7 +10,7 @@ import java.util.List;
 public final class ApiCoIdData {
     private ApiCoIdData() {}
 
-    public enum Quality { UNAVAILABLE, STALE, INCOMPLETE, UNVERIFIED }
+    public enum Quality { COMPLETE, UNAVAILABLE, STALE, INCOMPLETE, UNVERIFIED }
 
     public record Provenance(String provider, String dataset, Instant asOf, Instant fetchedAt,
                              String calendarSource, String calendarVersion, String universeVersion,
