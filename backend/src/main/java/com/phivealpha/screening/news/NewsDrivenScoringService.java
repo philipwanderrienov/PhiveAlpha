@@ -37,6 +37,10 @@ public class NewsDrivenScoringService {
         this.policy = Objects.requireNonNull(policy);
     }
 
+    public static String modelVersion() {
+        return MODEL_VERSION;
+    }
+
     public Report score(LiquidUniverse.Evaluation universe, Map<String, Inputs> inputBySymbol,
                         Snapshot<Regime> market, Instant cutoff) {
         Objects.requireNonNull(cutoff);

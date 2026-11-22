@@ -92,9 +92,30 @@ public class StockScreenerService {
 
     private ScreeningSnapshot screen(Mode mode, Context context, List<DailyPrice> prices, Instant cutoff,
                                      List<LocalDate> momentumDates) {
-        var visible = prices.stream().filter(price ->
-                (price.observedAt() == null || !price.observedAt().toInstant().isAfter(cutoff))
-                        && (price.ingestedAt() == null || !price.ingestedAt().toInstant().isAfter(cutoff))).toList();
+        var result = evaluate(context, prices, cutoff, momentumDates);
+        return new ScreeningSnapshot(mode, Instant.now(), result.dataAsOf(), cutoff, result.quality(),
+                null, result.liquidity(), result.scoring(), result.decisions());
+    }
+
+    record EvaluationAtCutoff(Instant dataAsOf, Quality quality, Evaluation liquidity,
+                              NewsScoring.Report scoring, List<Decision> decisions) {
+        EvaluationAtCutoff {
+            decisions = List.copyOf(decisions);
+        }
+    }
+
+    int historicalMinimumSessions() {
+        return Math.max(MOMENTUM_SESSIONS, Math.max(liquidity.policy().lookbackSessions(),
+                liquidity.policy().minListingSessions()));
+    }
+
+    EvaluationAtCutoff evaluate(Context context, List<DailyPrice> prices, Instant cutoff) {
+        return evaluate(context, prices, cutoff, liquidity.priceWindow(context.calendar(), cutoff, MOMENTUM_SESSIONS));
+    }
+
+    private EvaluationAtCutoff evaluate(Context context, List<DailyPrice> prices, Instant cutoff,
+                                        List<LocalDate> momentumDates) {
+        var visible = prices.stream().filter(price -> visibleAt(price, cutoff)).toList();
         var evaluation = liquidity.evaluate(context.universe(), context.calendar(), visible, cutoff);
         var inputs = new HashMap<String, NewsScoring.Inputs>();
         var momentumIssues = new HashMap<String, Issue>();
@@ -130,8 +151,12 @@ public class StockScreenerService {
         var asOf = evaluation.results().stream().map(LiquidUniverse.Result::liquidity)
                 .filter(Objects::nonNull).map(LiquidUniverse.LiquidityMetrics::latestSessionClose)
                 .max(Comparator.naturalOrder()).orElse(null);
-        return new ScreeningSnapshot(mode, Instant.now(), asOf, cutoff, quality(evaluation, decisions),
-                null, evaluation, report, decisions);
+        return new EvaluationAtCutoff(asOf, quality(evaluation, decisions), evaluation, report, decisions);
+    }
+
+    static boolean visibleAt(DailyPrice price, Instant cutoff) {
+        return (price.observedAt() == null || !price.observedAt().toInstant().isAfter(cutoff))
+                && (price.ingestedAt() == null || !price.ingestedAt().toInstant().isAfter(cutoff));
     }
 
     private static MomentumInput momentum(Context context, Member member,

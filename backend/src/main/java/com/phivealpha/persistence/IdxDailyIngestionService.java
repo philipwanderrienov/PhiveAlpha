@@ -203,6 +203,13 @@ public class IdxDailyIngestionService {
         });
     }
 
+    /** Read the guarded development store with original row provenance for historical preflight. */
+    public Flux<DailyPrice> historicalReadinessHistory(List<String> symbols, AdjustmentStatus basis,
+                                                        LocalDate from, LocalDate through, Instant cutoff) {
+        return Flux.fromIterable(symbols).concatMap(symbol -> persistence.historicalPrices(symbol, basis,
+                from, through, cutoff.atOffset(ZoneOffset.UTC)));
+    }
+
     private static DailyPrice normalize(DailyBar bar, String source, Instant observed, Instant now) {
         return new DailyPrice(bar.symbol(), bar.tradingDate(), bar.openIdr(), bar.highIdr(), bar.lowIdr(),
                 bar.closeIdr(), bar.volume(), bar.turnoverIdr(), source, ceiling(observed), ceiling(now), bar.adjustment());

@@ -39,9 +39,7 @@ public final class HistoricalDatasetReadinessAudit {
             issues.add(new Issue(FRAME_UNAVAILABLE, null));
             return report(request, Outcome.UNAVAILABLE, List.of(), List.of(), null, issues);
         }
-        if (frame.availableAt().isAfter(request.cutoff())) issues.add(new Issue(FRAME_AFTER_CUTOFF, null));
-        if (frame.universe().availableAt().isAfter(frame.availableAt())) issues.add(new Issue(UNIVERSE_AFTER_FRAME, null));
-        if (frame.calendar().availableAt().isAfter(frame.availableAt())) issues.add(new Issue(CALENDAR_AFTER_FRAME, null));
+        issues.addAll(vintageIssues(request));
         if (!issues.isEmpty()) {
             return report(request, Outcome.UNVERIFIED, List.of(), List.of(), null, issues);
         }
@@ -87,6 +85,21 @@ public final class HistoricalDatasetReadinessAudit {
             outcome = Outcome.INCOMPLETE;
         }
         return report(request, outcome, dates, equities, benchmark, issues);
+    }
+
+    static List<Issue> vintageIssues(Request request) {
+        var frame = request.frame();
+        if (frame == null) return List.of(new Issue(FRAME_UNAVAILABLE, null));
+        var issues = new ArrayList<Issue>();
+        if (frame.availableAt().isAfter(request.cutoff())) issues.add(new Issue(FRAME_AFTER_CUTOFF, null));
+        if (frame.universe().availableAt().isAfter(frame.availableAt())) issues.add(new Issue(UNIVERSE_AFTER_FRAME, null));
+        if (frame.calendar().availableAt().isAfter(frame.availableAt())) issues.add(new Issue(CALENDAR_AFTER_FRAME, null));
+        return issues;
+    }
+
+    static Report storageUnavailable(Request request) {
+        return report(request, Outcome.UNAVAILABLE, List.of(), List.of(), null,
+                List.of(new Issue(HISTORICAL_STORAGE_UNAVAILABLE, null)));
     }
 
     private Series equity(Request request, AuditWindow window, String symbol, List<LiquidUniverse.Member> members,

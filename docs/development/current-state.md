@@ -1,3 +1,7 @@
+## 2026-11-22 — PhiveAlpha Phase 1O-B (lokal)
+
+Workflow screening historis internal memakai vintage, cakupan, dan cutoff eksplisit. Preflight Phase 1O-A harus `READY` sebelum screener menilai kandidat dengan aturan existing. Candle dan berita terlambat tidak memengaruhi ranking historis. Calendar, universe, factor evidence, dan model tercatat. Kegagalan storage menghasilkan laporan tanpa fallback. Validasi menggunakan fixture dan mock lokal. Maven offline 122 lulus, termasuk 10 tes baru, dan satu skip loopback. [Handoff Phase 1O-B](phivealpha-phase-1o-b.md)
+
 ## 2026-11-22 — PhiveAlpha Phase 1O-A (lokal)
 
 Preflight histori IDX mengaudit satu cutoff dengan target default 250 sesi tertutup dari kalender berversi. Hasil memisahkan kelengkapan candle, ketersediaan temporal, provenance, status instrumen dan corporate action, serta IHSG. Workflow riset memanggil preflight secara eksplisit. Replay Phase 1G mempertahankan kontrak yang sama. Runner PostgreSQL development tertahan probe loopback. Bukti fase ini menggunakan fixture sintetis. Maven offline 112 lulus, termasuk 18 tes audit baru, dan satu skip loopback. [Handoff Phase 1O-A](phivealpha-phase-1o-a.md)

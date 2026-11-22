@@ -930,3 +930,7 @@ Kartu Screener dipadatkan dengan target sentuh 44 px. Skor tampil dengan maksima
 ## 2026-11-22 — PhiveAlpha Phase 1O-A (lokal)
 
 Baseline `e4972f5`. Menambahkan audit histori offline per cutoff dengan lookback 250 sesi yang dapat dikonfigurasi. Audit menggunakan aturan kalender dan validasi candle screening yang sama, serta mengevaluasi provenance, evidence status/corporate action, dan IHSG. Replay dan skema persistence tetap memakai kontrak yang ada. Runner daily-ingestion dan screener terisolasi tertahan probe socket sebelum membuat klaster. Maven offline 112 lulus, termasuk 18 tes audit baru, dan satu skip loopback. [Handoff Phase 1O-A](phivealpha-phase-1o-a.md)
+
+## 2026-11-22 — PhiveAlpha Phase 1O-B (lokal)
+
+Baseline `a9756ba`. Menambah workflow point-in-time internal dengan context immutable, preflight readiness, audit dan scoring pada cakupan yang sama, serta laporan deterministik. Reader development mempertahankan provenance candle. Rute fixture dan replay mempertahankan kontraknya. Runner PostgreSQL daily-ingestion dan screener berhenti saat probe loopback sebelum klaster dibuat. Maven offline 122 lulus, termasuk 10 tes baru, dan satu skip loopback. [Handoff Phase 1O-B](phivealpha-phase-1o-b.md)
