@@ -1,3 +1,19 @@
+## 2026-11-22 — PhiveAlpha Phase 1N.1 (lokal)
+
+Kartu Screener dipadatkan dengan target sentuh 44 px. Skor tampil dengan maksimal dua desimal Indonesia, sementara nilai API tetap tersedia pada rincian dan urutan backend tetap dipakai saat skor sama. Navigasi bawah memakai ikon garis seragam. Unit frontend 16 lulus, build Angular lulus, dan git diff --check lulus. Review Chromium dengan fixture lokal mencakup 360, 768, dan 1280 px. Pemeriksaan meliputi ukuran target, overflow, urutan kandidat, serta Enter dan Spasi untuk membuka riset dan rincian, pengembalian fokus, dan navigasi keyboard. [Handoff Phase 1N](phivealpha-phase-1n.md#phase-1n1--mobile-usability-polish)
+
+## 2026-11-22 — PhiveAlpha Phase 1N (lokal)
+
+Redesain Angular light-only dengan navigasi bawah mobile dan sidebar desktop. Screener menampilkan maksimal lima kandidat dan membuka satu tampilan riset dengan bukti ringkas, rincian teknis tertutup, dan alasan saham belum lolos. API fixture dan rute lama tetap berlaku. Regresi Maven offline mencatat 94 lulus dan satu skip loopback. Panduan pemeriksaan browser pada host tersedia di [handoff Phase 1N](phivealpha-phase-1n.md).
+
+## 2026-11-21 — PhiveAlpha Phase 1M (lokal)
+
+Modernisasi light-only menambahkan sidebar desktop, navigasi compact, token visual bersama, dan pembaruan keenam halaman. Shortlist Screener memilih satu detail yang dapat ditutup, dengan kualitas, provenance dan guard skor Phase 1L tetap berlaku. Unit frontend 13 lulus, build Angular lulus, dan Maven offline 94 lulus dengan satu skip loopback. Aturan CSS diperiksa pada 360, 768, dan 1280 px. Pemeriksaan visual browser tersisa untuk host development. [Handoff Phase 1M](phivealpha-phase-1m.md)
+
+## 2026-11-21 — PhiveAlpha Phase 1L (lokal)
+
+Dashboard Stock Screener mengonsumsi endpoint fixture Phase 1K melalui client Angular yang sama. Shortlist maksimal lima membuka detail likuiditas, faktor momentum dan berita, provenance, serta keputusan yang belum lolos. Skor riset mengikuti kualitas snapshot dan mode sumber ditampilkan. Weekly Top 5 dan Stock Analysis tetap terhubung. Unit frontend 13 lulus, build Angular lulus, dan Maven offline 94 lulus dengan satu skip loopback. Pemeriksaan browser dan PostgreSQL loopback tersisa untuk host development. [Handoff Phase 1L](phivealpha-phase-1l.md)
+
 ## 2026-11-21 — PhiveAlpha Phase 1K (lokal)
 
 Stock Screener menghubungkan history Phase 1J, Liquid Universe, dan News-Driven Scoring pada cutoff yang sama. Endpoint GET `/api/idx/v1/stock-screener` menyajikan fixture secara default dan menyediakan opt-in pembacaan fixture historis di PostgreSQL development. Snapshot mencatat eligibility, alasan, faktor, dan provenance dengan ranking riset maksimum lima. Maven offline 94 lulus dan satu skip loopback. Runner PostgreSQL sementara tersedia, tetapi sandbox menolak socket. [Handoff Phase 1K](phivealpha-phase-1k.md)

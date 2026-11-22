@@ -7,25 +7,36 @@ import { IdxApi } from '../core/idx-api';
 @Component({
   imports: [DecimalPipe, RouterLink],
   template: `
-    <h1>Weekly Top 5</h1>
-    <p class="subtitle">Peringkat berdasarkan perubahan harga dari penutupan pekan sebelumnya.</p>
+    <header class="page-header">
+      <h1>Weekly Top 5</h1>
+      <p class="subtitle">Bandingkan perubahan harga dari penutupan pekan sebelumnya. Pilih saham untuk melihat harga dan tanggal sesinya.</p>
+    </header>
     @if (ranking.isLoading()) {
-      <p role="status">Memuat peringkat…</p>
+      <p class="panel state" role="status">Memuat peringkat…</p>
     } @else if (ranking.error()) {
-      <p role="alert">Peringkat gagal dimuat. <button (click)="ranking.reload()">Coba lagi</button></p>
+      <div class="panel state state-error">
+        <p role="alert">Peringkat gagal dimuat.</p>
+        <button type="button" (click)="ranking.reload()">Coba lagi</button>
+      </div>
     } @else if (ranking.hasValue()) {
-      <ol class="ranking panel">
-        @for (stock of ranking.value(); track stock.symbol) {
-          <li>
-            <div class="ranking-row">
-              <a routerLink="/stock-analysis" [queryParams]="{symbol: stock.symbol}">{{ stock.symbol }} · {{ stock.name }}</a>
-              <strong>{{ stock.weeklyChangePercent | number:'1.2-2' }}%</strong>
-            </div>
-          </li>
-        } @empty {
-          <li>Belum ada saham dalam peringkat.</li>
-        }
-      </ol>
+      <section class="panel" aria-labelledby="weekly-ranking">
+        <h2 class="section-heading" id="weekly-ranking">Perubahan mingguan</h2>
+        <ol class="ranking" role="list">
+          @for (stock of ranking.value(); track stock.symbol) {
+            <li class="ranking-row">
+              <span class="rank-mark">{{ $index + 1 }}</span>
+              <a class="ticker-link" routerLink="/stock-analysis"
+                [queryParams]="{symbol: stock.symbol}">{{ stock.symbol }}<span class="ranking-company">{{ stock.name }}</span></a>
+              <strong class="change numeric" [class.change-up]="stock.weeklyChangePercent > 0"
+                [class.change-down]="stock.weeklyChangePercent < 0">
+                {{ stock.weeklyChangePercent > 0 ? '+' : '' }}{{ stock.weeklyChangePercent | number:'1.2-2' }}%
+              </strong>
+            </li>
+          } @empty {
+            <li class="state">Belum ada saham dalam peringkat.</li>
+          }
+        </ol>
+      </section>
     }
   `,
 })

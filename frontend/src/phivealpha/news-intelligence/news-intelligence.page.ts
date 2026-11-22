@@ -7,22 +7,30 @@ import { IdxApi } from '../core/idx-api';
 @Component({
   imports: [DatePipe, RouterLink],
   template: `
-    <h1>News Intelligence</h1>
-    <p class="subtitle">Contoh berita bertanda waktu dengan tautan ke saham terkait.</p>
+    <header class="page-header">
+      <h1>News Intelligence</h1>
+      <p class="subtitle">Telusuri kabar simulasi per emiten dan lihat kapan berita diterbitkan.</p>
+    </header>
     @if (headlines.isLoading()) {
-      <p role="status">Memuat berita…</p>
+      <p class="panel state" role="status">Memuat berita…</p>
     } @else if (headlines.error()) {
-      <p role="alert">Berita gagal dimuat. <button (click)="headlines.reload()">Coba lagi</button></p>
+      <div class="panel state state-error">
+        <p role="alert">Berita gagal dimuat.</p>
+        <button type="button" (click)="headlines.reload()">Coba lagi</button>
+      </div>
     } @else if (headlines.hasValue()) {
-      <ul class="cards">
+      <ul class="plain-list news-feed">
         @for (item of headlines.value(); track item.symbol + item.publishedAt) {
-          <li class="panel">
-            <a routerLink="/stock-analysis" [queryParams]="{symbol: item.symbol}">{{ item.symbol }}</a>
-            <h2>{{ item.title }}</h2>
-            <p>{{ item.source }} · {{ item.publishedAt | date:'d MMM y, HH:mm':'+0700' }} WIB</p>
+          <li class="panel news-card">
+            <div>
+              <span class="badge">{{ item.symbol }}</span>
+              <h2 class="news-title">{{ item.title }}</h2>
+            </div>
+            <p class="meta">{{ item.source }} · <time [attr.datetime]="item.publishedAt">{{ item.publishedAt | date:'d MMM y, HH:mm':'+0700' }} WIB</time></p>
+            <a class="page-link" routerLink="/stock-analysis" [queryParams]="{symbol: item.symbol}">Lihat saham {{ item.symbol }} <span aria-hidden="true">→</span></a>
           </li>
         } @empty {
-          <li>Belum ada berita dalam fixture.</li>
+          <li class="panel state">Belum ada berita dalam fixture.</li>
         }
       </ul>
     }

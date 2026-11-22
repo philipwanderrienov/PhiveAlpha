@@ -9,28 +9,42 @@ import { IdxApi } from '../core/idx-api';
 @Component({
   imports: [CurrencyPipe, DatePipe, DecimalPipe],
   template: `
-    <h1>Stock Analysis</h1>
-    <p class="subtitle">Lihat harga penutupan dan perubahan mingguan berdasarkan kode saham.</p>
-    <form class="panel form-row" (submit)="search($event, ticker.value)">
-      <label>Kode saham <input #ticker required [value]="symbol()" placeholder="BBCA" /></label>
-      <button type="submit">Lihat saham</button>
-    </form>
-    @if (snapshot.isLoading()) {
-      <p role="status">Memuat data saham…</p>
-    } @else if (snapshot.error()) {
-      <p role="alert">{{ message() }}</p>
-    } @else if (snapshot.hasValue()) {
-      @let stock = snapshot.value();
-      <section class="panel">
-        <h2>{{ stock.symbol }} · {{ stock.name }}</h2>
-        <dl>
-          <dt>Sektor</dt><dd>{{ stock.sector }}</dd>
-          <dt>Sesi</dt><dd>{{ stock.sessionDate | date:'d MMM y':'UTC' }}</dd>
-          <dt>Harga penutupan</dt><dd>{{ stock.closeIdr | currency:'IDR':'symbol':'1.0-0' }}</dd>
-          <dt>Perubahan mingguan</dt><dd>{{ stock.weeklyChangePercent | number:'1.2-2' }}%</dd>
-        </dl>
-      </section>
-    }
+    <header class="page-header">
+      <h1>Stock Analysis</h1>
+      <p class="subtitle">Masukkan kode emiten untuk melihat harga penutupan dan perubahan mingguannya.</p>
+    </header>
+    <div class="stack">
+      <form class="panel form-row" (submit)="search($event, ticker.value)">
+        <label>Kode saham <input #ticker required autocapitalize="characters" spellcheck="false" [value]="symbol()" placeholder="BBCA" /></label>
+        <button type="submit">Lihat saham</button>
+      </form>
+      @if (snapshot.isLoading()) {
+        <p class="panel state" role="status">Memuat data saham…</p>
+      } @else if (snapshot.error()) {
+        <p class="panel state state-error" role="alert">{{ message() }}</p>
+      } @else if (snapshot.hasValue()) {
+        @let stock = snapshot.value();
+        <section class="panel feature-panel" aria-labelledby="stock-result" aria-live="polite">
+          <h2 id="stock-result">{{ stock.symbol }} · {{ stock.name }}</h2>
+          <p class="meta">{{ stock.sector }} · Sesi {{ stock.sessionDate | date:'d MMM y':'UTC' }}</p>
+          <dl class="metric-grid">
+            <div>
+              <dt>Harga penutupan</dt>
+              <dd class="metric-value numeric">{{ stock.closeIdr | currency:'IDR':'symbol':'1.0-0' }}</dd>
+            </div>
+            <div>
+              <dt>Perubahan mingguan</dt>
+              <dd class="metric-value numeric" [class.change-up]="stock.weeklyChangePercent > 0"
+                [class.change-down]="stock.weeklyChangePercent < 0">
+                {{ stock.weeklyChangePercent > 0 ? '+' : '' }}{{ stock.weeklyChangePercent | number:'1.2-2' }}%
+              </dd>
+            </div>
+          </dl>
+        </section>
+      } @else {
+        <p class="panel state">Ketik kode saham, misalnya BBCA, untuk memulai.</p>
+      }
+    </div>
   `,
 })
 export class StockAnalysisPage {

@@ -7,28 +7,37 @@ import { IdxApi } from '../core/idx-api';
 @Component({
   imports: [CurrencyPipe, DecimalPipe],
   template: `
-    <h1>Paper Trading</h1>
-    <p class="subtitle">Simulasi nilai bruto pada harga penutupan fixture, sebelum biaya. Satu lot berisi 100 saham.</p>
-    <form class="panel form-row" (submit)="calculate($event, ticker.value, lots.valueAsNumber)">
-      <label>Kode saham <input #ticker required value="BBCA" /></label>
-      <label>Jumlah lot <input #lots required type="number" min="1" max="10000" step="1" value="1" /></label>
-      <button type="submit">Hitung estimasi</button>
-    </form>
-    @if (estimate.isLoading()) {
-      <p role="status">Menghitung estimasi…</p>
-    } @else if (estimate.error()) {
-      <p role="alert">{{ message() }}</p>
-    } @else if (estimate.hasValue()) {
-      @let result = estimate.value();
-      <section class="panel" aria-live="polite">
-        <h2>Estimasi {{ result.symbol }}</h2>
-        <dl>
-          <dt>Jumlah saham</dt><dd>{{ result.shares | number }}</dd>
-          <dt>Harga per saham</dt><dd>{{ result.priceIdr | currency:'IDR':'symbol':'1.0-0' }}</dd>
-          <dt>Nilai bruto</dt><dd>{{ result.grossIdr | currency:'IDR':'symbol':'1.0-0' }}</dd>
-        </dl>
-      </section>
-    }
+    <header class="page-header">
+      <h1>Paper Trading</h1>
+      <p class="subtitle">Perkirakan nilai saham berdasarkan jumlah lot dan harga penutupan dalam simulasi.</p>
+    </header>
+    <div class="stack">
+      <form class="panel" (submit)="calculate($event, ticker.value, lots.valueAsNumber)">
+        <h2 class="section-heading">Hitung nilai saham</h2>
+        <div class="form-row">
+          <label>Kode saham <input #ticker required autocapitalize="characters" spellcheck="false" value="BBCA" /></label>
+          <label>Jumlah lot <input #lots required type="number" min="1" max="10000" step="1" value="1" /></label>
+          <button type="submit">Hitung estimasi</button>
+        </div>
+        <p class="meta">Satu lot berisi 100 saham.</p>
+      </form>
+      @if (estimate.isLoading()) {
+        <p class="panel state" role="status">Menghitung estimasi…</p>
+      } @else if (estimate.error()) {
+        <p class="panel state state-error" role="alert">{{ message() }}</p>
+      } @else if (estimate.hasValue()) {
+        @let result = estimate.value();
+        <section class="panel feature-panel" aria-labelledby="estimate-result" aria-live="polite">
+          <h2 id="estimate-result">Estimasi {{ result.symbol }}</h2>
+          <p class="metric-value numeric gross-value">{{ result.grossIdr | currency:'IDR':'symbol':'1.0-0' }}</p>
+          <p class="meta">Nilai bruto sebelum biaya</p>
+          <dl class="metric-grid">
+            <div><dt>Jumlah saham</dt><dd class="metric-value numeric">{{ result.shares | number }}</dd></div>
+            <div><dt>Harga per saham</dt><dd class="metric-value numeric">{{ result.priceIdr | currency:'IDR':'symbol':'1.0-0' }}</dd></div>
+          </dl>
+        </section>
+      }
+    </div>
   `,
 })
 export class PaperTradingPage {

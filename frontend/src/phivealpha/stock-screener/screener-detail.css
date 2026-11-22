@@ -1,0 +1,5 @@
+:host { display: block; }
+.technical, .rejection-reasons { margin-top: .75rem; }
+.factor-list { list-style: none; padding: 0; margin-bottom: 0; }
+.factor-evidence { border-top: 1px solid var(--border); padding: .65rem 0; }
+.evidence-summary .cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }

@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import type { ScreeningSnapshot } from './stock-screener';
 
 export interface StockSnapshot {
   symbol: string;
@@ -40,6 +41,10 @@ export class IdxApi {
 
   weeklyTopFive() {
     return this.http.get<StockSnapshot[]>(`${this.base}/weekly-top-five`);
+  }
+
+  stockScreener() {
+    return this.http.get<ScreeningSnapshot>(`${this.base}/stock-screener`);
   }
 
   headlines() {

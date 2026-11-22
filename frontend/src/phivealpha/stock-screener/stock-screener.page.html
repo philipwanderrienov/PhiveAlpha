@@ -1,0 +1,155 @@
+@if (selectedCandidate(); as candidate) {
+  @let assessment = candidate.assessment;
+  <section id="research-detail" class="stack" aria-labelledby="research-heading">
+    <button class="back-button" type="button" (click)="closeResearch()"><span aria-hidden="true">←</span> Kembali ke kandidat</button>
+    @let quality = snapshot.value()!.quality;
+    <header class="panel research-hero">
+      <p class="section-label">Riset saham</p>
+      <h1 id="research-heading" tabindex="-1" #researchHeading>{{ assessment.symbol }}</h1>
+      <p class="subtitle">{{ names().get(assessment.symbol) ?? 'Nama emiten belum tersedia' }}</p>
+      <div class="research-meta">
+        <span class="badge">Peringkat riset {{ candidate.rank }}</span>
+        <span class="badge" [class.state-warning]="quality !== 'COMPLETE'">{{ qualityLabels[quality] }}</span>
+        @if (canShowScores(assessment) && assessment.overallScore !== null) {
+          <span class="badge">Skor riset <data [attr.value]="assessment.overallScore">{{ assessment.overallScore | number:'1.0-2':'id-ID' }}</data></span>
+        }
+      </div>
+      @if (canShowScores(assessment) && assessment.overallScore !== null) {
+        <p class="meta score-note">{{ scoreExplanation }}</p>
+      }
+    </header>
+    <app-screener-detail [decision]="candidate.decision" [assessment]="assessment"
+      [showScores]="canShowScores(assessment)" [snapshotQuality]="quality" />
+    <a class="page-link" routerLink="/stock-analysis" [queryParams]="{symbol: assessment.symbol}">Lihat harga dan perubahan mingguan <span aria-hidden="true">→</span></a>
+  </section>
+} @else {
+  <header class="page-header">
+    <h1>Stock Screener</h1>
+    <p class="subtitle">Temukan saham untuk diteliti dan pahami alasan di balik peringkatnya.</p>
+  </header>
+
+  @if (snapshot.isLoading()) {
+    <p class="panel state" role="status">Memuat hasil screener…</p>
+  } @else if (snapshot.error()) {
+    <div class="panel state state-error">
+      <p role="alert">Hasil screener gagal dimuat.</p>
+      <button type="button" (click)="snapshot.reload()">Coba lagi</button>
+    </div>
+  } @else if (snapshot.hasValue()) {
+    @let data = snapshot.value();
+    <div class="stack">
+      <section class="panel snapshot-strip" aria-label="Ringkasan data riset">
+        <div>
+          <strong>{{ candidates().length }} kandidat</strong>
+          <p class="meta">
+            @if (data.dataAsOf) {
+              Data per <time [attr.datetime]="data.dataAsOf">{{ data.dataAsOf | date:'d MMM y, HH:mm':'+0700' }} WIB</time>
+            } @else { Waktu data belum tersedia }
+          </p>
+        </div>
+        <div>
+          <span class="badge" [class.state-warning]="data.quality !== 'COMPLETE'">{{ qualityLabels[data.quality] }}</span>
+          <p class="meta">{{ data.mode === 'FIXTURE' ? 'Data sintetis' : 'Riwayat simulasi development' }}</p>
+        </div>
+      </section>
+      @if (data.failure || data.quality !== 'COMPLETE') {
+        <p class="panel state state-warning" role="status">
+          @switch (data.failure) {
+            @case ('PERSISTENCE_DISABLED') { Penyimpanan development belum diaktifkan. }
+            @case ('HISTORICAL_STORAGE_UNAVAILABLE') { Riwayat harga gagal dibaca dari penyimpanan development. }
+          }
+          {{ qualityLabels[data.quality] }}. Skor disembunyikan.
+        </p>
+      }
+
+      <section aria-labelledby="shortlist-heading">
+        <h2 class="section-heading" id="shortlist-heading" tabindex="-1" #shortlistHeading>Kandidat riset</h2>
+        @if (hasVisibleScores()) {
+          <p class="meta score-note" id="shortlist-score-note">{{ scoreExplanation }}</p>
+        }
+        <ol class="cards candidate-grid" role="list" [attr.aria-describedby]="hasVisibleScores() ? 'shortlist-score-note' : null">
+          @for (candidate of candidates(); track candidate.assessment.symbol) {
+            @let assessment = candidate.assessment;
+            <li class="panel candidate-card">
+              <div class="candidate-identity">
+                <div class="candidate-title">
+                  <span class="rank-mark">#{{ candidate.rank }}</span>
+                  <h3 class="candidate-symbol">{{ assessment.symbol }}</h3>
+                </div>
+                <p class="meta candidate-company">{{ names().get(assessment.symbol) ?? 'Nama emiten belum tersedia' }}</p>
+              </div>
+              @if (canShowScores(assessment) && assessment.overallScore !== null) {
+                <div class="score numeric">
+                  <small>Skor riset</small>
+                  <data [attr.value]="assessment.overallScore">{{ assessment.overallScore | number:'1.0-2':'id-ID' }}</data>
+                </div>
+              }
+              <button class="candidate-action" type="button" [id]="'candidate-' + assessment.symbol"
+                [attr.aria-label]="'Lihat riset ' + assessment.symbol" (click)="openResearch(assessment.symbol)">
+                Lihat riset
+              </button>
+            </li>
+          } @empty {
+            <li class="panel state">{{ data.quality === 'UNAVAILABLE' ? 'Shortlist belum tersedia.' : 'Belum ada kandidat dalam shortlist.' }}</li>
+          }
+        </ol>
+      </section>
+
+      @if (rejections().length) {
+        <section class="panel" aria-labelledby="rejections-heading">
+          <h2 id="rejections-heading">Saham yang belum lolos</h2>
+          <ul class="plain-list">
+            @for (decision of rejections(); track decision.symbol) {
+              <li class="separated-row">
+                <strong>{{ decision.symbol }}</strong> <span class="muted">{{ names().get(decision.symbol) }}</span>
+                <p class="meta">{{ decision.status === 'UNVERIFIED' ? 'Kelayakan belum terverifikasi' : 'Tidak memenuhi syarat' }}</p>
+                <app-screener-detail [decision]="decision" [assessment]="decision.assessment" [excluded]="true" />
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <details class="panel disclosure">
+        <summary>Sumber dan waktu data</summary>
+        <dl>
+          <dt>Mode</dt><dd>{{ data.mode }}</dd>
+          <dt>Kualitas</dt><dd>{{ data.quality }}</dd>
+          <dt>Data per (UTC)</dt><dd>{{ data.dataAsOf ?? 'Belum tersedia' }}</dd>
+          <dt>Dibuat (UTC)</dt><dd>{{ data.generatedAt }}</dd>
+          <dt>Batas waktu riset (UTC)</dt><dd>{{ data.cutoff }}</dd>
+          <dt>Model riset</dt><dd>{{ data.scoring?.modelVersion ?? 'Belum tersedia' }}</dd>
+          @if (data.failure) { <dt>Kode kegagalan</dt><dd>{{ data.failure }}</dd> }
+        </dl>
+      @if (data.liquidity; as reference) {
+        <dl>
+          <dt>Universe</dt><dd>{{ reference.universeSource ? reference.universeSource + ' · ' + reference.universeVersion : 'Belum tersedia' }}</dd>
+          <dt>Universe per (UTC)</dt><dd>{{ (reference.universeAsOf) ?? 'Belum tersedia' }}</dd>
+          <dt>Universe tersedia (UTC)</dt><dd>{{ (reference.universeAvailableAt) ?? 'Belum tersedia' }}</dd>
+          <dt>Kalender</dt><dd>{{ reference.calendarSource ? reference.calendarSource + ' · ' + reference.calendarVersion : 'Belum tersedia' }}</dd>
+          <dt>Kalender tersedia (UTC)</dt><dd>{{ (reference.calendarAvailableAt) ?? 'Belum tersedia' }}</dd>
+        </dl>
+        @if (reference.referenceIssues.length) {
+          <h3>Masalah referensi</h3>
+          <ul>
+            @for (issue of reference.referenceIssues; track $index) {
+              <li>{{ issue.reason }} @if (issue.tradingDate) { · {{ issue.tradingDate }} }</li>
+            }
+          </ul>
+        }
+      } @else {
+        <p>Provenance belum tersedia.</p>
+      }
+      @let reasons = data.scoring?.reasons ?? [];
+      @if (reasons.length) {
+        <h3>Alasan penilaian snapshot</h3>
+        <ul>
+          @for (reason of reasons; track reason) {
+            <li>{{ reason }}</li>
+          }
+        </ul>
+      }
+      </details>
+    </div>
+  }
+}

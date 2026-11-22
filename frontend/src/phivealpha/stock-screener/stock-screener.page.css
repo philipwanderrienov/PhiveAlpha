@@ -1,0 +1,39 @@
+.snapshot-strip, .research-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+.snapshot-strip { border-inline-start: .25rem solid var(--accent); }
+.candidate-grid { grid-template-columns: 1fr; gap: .55rem; }
+.candidate-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .55rem;
+  padding: .7rem .75rem;
+}
+.candidate-title { display: flex; align-items: center; gap: .4rem; }
+.candidate-title .rank-mark { min-width: 1.65rem; min-height: 1.65rem; }
+.candidate-symbol { min-width: 0; margin: 0; font-size: 1.15rem; }
+.candidate-company { margin-top: .2rem; line-height: 1.35; }
+.score { grid-column: 2; display: grid; text-align: end; line-height: 1.25; }
+.score small { color: var(--muted); }
+.score data { font-weight: 750; }
+.candidate-action { grid-column: 3; padding-inline: .55rem; font-size: .875rem; }
+.score-note { margin-block: .4rem .65rem; }
+.research-meta { justify-content: start; margin-top: 1rem; }
+.research-meta .badge { gap: .25rem; }
+.research-hero { background: var(--surface-soft); }
+.back-button { justify-self: start; }
+@media (max-width: 21.25rem) {
+  .candidate-card { grid-template-columns: minmax(0, 1fr) auto; }
+  .candidate-action { grid-column: 1 / -1; justify-self: end; }
+}
+@media (min-width: 36rem) {
+  .candidate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 74rem) {
+  .candidate-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

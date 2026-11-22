@@ -12,6 +12,11 @@ export const routes: Routes = [
     loadComponent: () => import('./weekly-top-five/weekly-top-five.page').then(page => page.WeeklyTopFivePage),
   },
   {
+    path: 'stock-screener',
+    title: 'Stock Screener | PhiveAlpha',
+    loadComponent: () => import('./stock-screener/stock-screener.page').then(page => page.StockScreenerPage),
+  },
+  {
     path: 'stock-analysis',
     title: 'Stock Analysis | PhiveAlpha',
     loadComponent: () => import('./stock-analysis/stock-analysis.page').then(page => page.StockAnalysisPage),
