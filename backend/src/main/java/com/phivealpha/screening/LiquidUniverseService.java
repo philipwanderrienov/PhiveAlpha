@@ -103,9 +103,9 @@ public class LiquidUniverseService {
         return issues.isEmpty() ? List.copyOf(dates) : List.of();
     }
 
-    private static List<LocalDate> closedDates(VersionedIdxCalendar calendar, Instant cutoff,
+    static List<LocalDate> closedDates(VersionedIdxCalendar calendar, Instant cutoff,
                                               int needed, List<Issue> issues) {
-        var closed = new ArrayList<LocalDate>(needed);
+        var closed = new ArrayList<LocalDate>();
         for (var day = cutoff.atZone(IdxMarketCalendar.ZONE).toLocalDate();
                 closed.size() < needed; day = day.minusDays(1)) {
             if (!calendar.covers(day, day)) {
@@ -195,7 +195,7 @@ public class LiquidUniverseService {
                 DataQuality.COMPLETE, metrics, completeness, issues);
     }
 
-    private static Reason instrumentIssue(Member member, LocalDate listingBoundary,
+    static Reason instrumentIssue(Member member, LocalDate listingBoundary,
                                           VersionedIdxCalendar calendar, Instant cutoff) {
         if (member.securityType() == SecurityType.OTHER) {
             return NOT_COMMON_STOCK;
@@ -256,23 +256,29 @@ public class LiquidUniverseService {
     }
 
     static Reason candleIssue(DailyPrice price, LocalDate listedOn, Instant sessionClose) {
-        if (price.observedAt() == null || price.ingestedAt() == null
-                || price.observedAt().toInstant().isBefore(sessionClose) || price.ingestedAt().isBefore(price.observedAt())) {
+        if (!validCandleAvailability(price, sessionClose)) {
             return INVALID_PRICE_AVAILABILITY;
         }
         if (price.adjustmentStatus() != AdjustmentStatus.UNADJUSTED) {
             return ADJUSTMENT_BASIS_UNVERIFIED;
         }
-        if (price.tradingDate().isBefore(listedOn) || price.source() == null || price.source().isBlank()
-                || !positive(price.open()) || !positive(price.high()) || !positive(price.low())
-                || !positive(price.close()) || price.low().compareTo(price.open().min(price.close())) > 0
-                || price.high().compareTo(price.open().max(price.close())) < 0 || price.volume() < 0
-                || price.turnover() == null || price.turnover().signum() < 0
-                || ((price.volume() == 0) != (price.turnover().signum() == 0))
-                || (price.volume() == 0 && price.low().compareTo(price.high()) != 0)) {
-            return INVALID_CANDLE;
-        }
-        return null;
+        return price.tradingDate().isBefore(listedOn) || price.source() == null || price.source().isBlank()
+                || price.turnover() == null || !validCandleValues(price) ? INVALID_CANDLE : null;
+    }
+
+    static boolean validCandleAvailability(DailyPrice price, Instant sessionClose) {
+        return price.observedAt() != null && price.ingestedAt() != null
+                && !price.observedAt().toInstant().isBefore(sessionClose)
+                && !price.ingestedAt().isBefore(price.observedAt());
+    }
+
+    static boolean validCandleValues(DailyPrice price) {
+        return positive(price.open()) && positive(price.high()) && positive(price.low()) && positive(price.close())
+                && price.low().compareTo(price.open().min(price.close())) <= 0
+                && price.high().compareTo(price.open().max(price.close())) >= 0 && price.volume() >= 0
+                && (price.turnover() == null || (price.turnover().signum() >= 0
+                        && ((price.volume() == 0) == (price.turnover().signum() == 0))))
+                && (price.volume() != 0 || price.low().compareTo(price.high()) == 0);
     }
 
     private LiquidityMetrics metrics(List<DailyPrice> valid, Instant latestSessionClose) {

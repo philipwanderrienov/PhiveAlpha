@@ -926,3 +926,7 @@ Redesain Angular light-only dengan navigasi bawah mobile dan sidebar desktop. Sc
 ## 2026-11-22 — PhiveAlpha Phase 1N.1 (lokal)
 
 Kartu Screener dipadatkan dengan target sentuh 44 px. Skor tampil dengan maksimal dua desimal Indonesia, sementara nilai API tetap tersedia pada rincian dan urutan backend tetap dipakai saat skor sama. Navigasi bawah memakai ikon garis seragam. Unit frontend 16 lulus, build Angular lulus, dan git diff --check lulus. Review Chromium dengan fixture lokal mencakup 360, 768, dan 1280 px. Pemeriksaan meliputi ukuran target, overflow, urutan kandidat, serta Enter dan Spasi untuk membuka riset dan rincian, pengembalian fokus, dan navigasi keyboard. [Handoff Phase 1N](phivealpha-phase-1n.md#phase-1n1--mobile-usability-polish)
+
+## 2026-11-22 — PhiveAlpha Phase 1O-A (lokal)
+
+Baseline `e4972f5`. Menambahkan audit histori offline per cutoff dengan lookback 250 sesi yang dapat dikonfigurasi. Audit menggunakan aturan kalender dan validasi candle screening yang sama, serta mengevaluasi provenance, evidence status/corporate action, dan IHSG. Replay dan skema persistence tetap memakai kontrak yang ada. Runner daily-ingestion dan screener terisolasi tertahan probe socket sebelum membuat klaster. Maven offline 112 lulus, termasuk 18 tes audit baru, dan satu skip loopback. [Handoff Phase 1O-A](phivealpha-phase-1o-a.md)
