@@ -84,3 +84,22 @@
   .watchlist-item { padding:.8rem; }
   .price-item { padding:.8rem; }
 }
+
+/* Phase 1R preparation — never display fabricated trade levels. */
+.watchlist-item .trade-levels { grid-column:1/-1; display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; border-top:1px dashed #e2eae4; padding:.7rem .1rem .1rem; }
+.trade-level { display:grid; gap:.16rem; min-width:3.7rem; }
+.trade-level small { color:var(--muted); font-size:.68rem; }
+.trade-level strong { color:#51675a; font-size:1rem; }
+.trade-level-status { margin-left:auto; color:#84581e; background:#fff4e4; border-radius:999px; padding:.3rem .65rem; font-size:.69rem; font-weight:680; }
+.trade-plan-preview { display:flex; align-items:center; gap:.9rem; padding:1.2rem; background:linear-gradient(105deg,#eef7f0,#fff); border:1px solid #d6e9dc; border-radius:1rem; }
+.trade-plan-icon { display:grid; place-items:center; flex:0 0 2.75rem; height:2.75rem; border-radius:.85rem; background:#e1f2e6; color:#087c58; font-size:1.65rem; }
+.trade-plan-preview > div:nth-child(2) { flex:1; min-width:0; }
+.trade-plan-preview strong { font-size:.94rem; }
+.trade-plan-preview p { margin:.3rem 0 0; font-size:.8rem; line-height:1.55; color:var(--muted); }
+.trade-plan-pill { white-space:nowrap; font-size:.7rem; font-weight:730; color:#326c50; background:#e3f3e9; border-radius:999px; padding:.38rem .7rem; }
+@media(max-width:45rem) {
+  .watchlist-item .trade-levels { grid-column:1/-1; grid-row:4; }
+  .trade-level-status { margin-left:0; }
+  .trade-plan-preview { align-items:flex-start; flex-wrap:wrap; }
+  .trade-plan-pill { margin-left:3.6rem; }
+}
