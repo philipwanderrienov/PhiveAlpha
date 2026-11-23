@@ -89,3 +89,31 @@
   .candidate-card { grid-template-columns: minmax(0,1fr) auto; }
   .candidate-action { grid-column: 1 / -1; justify-self: stretch; }
 }
+
+/* Phase 1Q — provenance cards */
+.provenance-accordion { padding:0; overflow:hidden; border-radius:1.1rem; }
+.provenance-trigger { display:flex; align-items:center; gap:.8rem; padding:1.1rem; list-style:none; cursor:pointer; }
+.provenance-trigger::-webkit-details-marker { display:none; }
+.provenance-trigger::marker { content:""; }
+.provenance-icon { display:grid; place-items:center; flex:0 0 2.5rem; height:2.5rem; border-radius:.8rem; background:#e7f4ec; color:#0d805a; font-size:1.2rem; }
+.provenance-heading { display:grid; gap:.2rem; flex:1; min-width:0; }
+.provenance-heading strong { font-size:1rem; }
+.provenance-heading small { color:var(--muted); font-size:.74rem; font-weight:450; }
+.provenance-pill { border-radius:999px; padding:.33rem .65rem; background:#edf6f0; color:#24644a; font-size:.72rem; font-weight:700; }
+.provenance-chevron { color:var(--muted); font-size:1.2rem; transition:transform 170ms ease; }
+.provenance-accordion[open] > .provenance-trigger .provenance-chevron { transform:rotate(180deg); }
+.provenance-body { border-top:1px solid var(--border); padding:1rem; }
+.provenance-overview { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-bottom:.85rem; padding:.85rem; border-radius:.8rem; background:#f2f8f3; }
+.provenance-overview small { color:var(--muted); margin-left:auto; }
+.provenance-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
+.provenance-card { min-width:0; padding:1.1rem; border:1px solid var(--border); border-radius:.9rem; overflow-wrap:anywhere; }
+.provenance-card h3 { margin:0 0 .75rem; font-size:1rem; }
+.provenance-card dl { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap:0 .6rem; margin:0; }
+.provenance-card dt, .provenance-card dd { padding:.55rem 0; border-bottom:1px solid #edf1ee; overflow-wrap:anywhere; font-size:.76rem; }
+.provenance-card dd { text-align:end; font-weight:650; }
+.provenance-card ul { padding-left:1.15rem; font-size:.8rem; }
+.provenance-note { margin-top:.9rem; padding:1rem; background:#fafbf9; border:1px solid var(--border); border-radius:.85rem; }
+.provenance-note h3 { margin:0 0 .6rem; }
+.provenance-note ul { margin:0; padding-left:1.2rem; }
+@media(max-width:46rem) { .provenance-grid { grid-template-columns:1fr; } .provenance-overview small { margin-left:0; width:100%; } .provenance-trigger { padding:.9rem; gap:.5rem; } .provenance-icon { flex-basis:2rem; height:2rem; } .provenance-pill { padding:.3rem .5rem; } }
+@media(prefers-reduced-motion:reduce) { .provenance-chevron { transition:none; } }
