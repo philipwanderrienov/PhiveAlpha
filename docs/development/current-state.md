@@ -1,3 +1,7 @@
+## 2026-11-22 — PhiveAlpha Phase 1O-C (lokal)
+
+Evaluasi forward internal menghubungkan shortlist point-in-time ke simulator replay untuk window 2, 5 dan 10 sesi. Laporan memasangkan kandidat dan IHSG pada window yang sama, memisahkan partisi kronologis, serta mencatat overlap dan cakupan sebelum menerbitkan agregat deskriptif. Hasil fixture sintetis hanya memverifikasi perilaku kode. Maven offline 133 lulus, termasuk 11 tes baru, dan satu skip loopback. [Handoff Phase 1O-C](phivealpha-phase-1o-c.md)
+
 ## 2026-11-22 — PhiveAlpha Phase 1O-B (lokal)
 
 Workflow screening historis internal memakai vintage, cakupan, dan cutoff eksplisit. Preflight Phase 1O-A harus `READY` sebelum screener menilai kandidat dengan aturan existing. Candle dan berita terlambat tidak memengaruhi ranking historis. Calendar, universe, factor evidence, dan model tercatat. Kegagalan storage menghasilkan laporan tanpa fallback. Validasi menggunakan fixture dan mock lokal. Maven offline 122 lulus, termasuk 10 tes baru, dan satu skip loopback. [Handoff Phase 1O-B](phivealpha-phase-1o-b.md)

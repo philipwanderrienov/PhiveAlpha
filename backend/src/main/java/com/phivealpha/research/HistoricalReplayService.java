@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class HistoricalReplayService {
-    private static final List<Integer> HORIZONS = List.of(2, 5, 10);
+    static final List<Integer> HORIZONS = List.of(2, 5, 10);
     private static final String STRATEGY_VERSION = "synthetic-replay-v1/fixture-news-v1";
     private static final String BENCHMARK_SYMBOL = "IHSG";
     private static final BigDecimal ZERO = BigDecimal.ZERO;
@@ -53,7 +53,7 @@ public class HistoricalReplayService {
     public Report replay(Dataset dataset, Split split, Costs costs, List<Instant> cutoffs) {
         var calendar = dataset.outcomeCalendar().calendar();
         validate(dataset, split, cutoffs);
-        var outcomes = outcomeIndex(dataset);
+        var outcomes = outcomeIndex(dataset.outcomes(), dataset.outcomeFreeze());
         var frames = dataset.frames().stream().sorted(Comparator.comparing(Frame::asOf)
                 .thenComparing(Frame::availableAt).reversed()).toList();
         var decisions = new ArrayList<Decision>();
@@ -75,7 +75,7 @@ public class HistoricalReplayService {
             decisions.add(decision);
             if (decision.reason() == null) {
                 evaluateOutcomes(decision, frame, window(split, partition), calendar, outcomes, costs,
-                        dataset.outcomeFreeze(), observations);
+                        dataset.outcomeFreeze(), observations, false);
             }
         }
         boolean settled = observations.stream().anyMatch(row ->
@@ -91,20 +91,24 @@ public class HistoricalReplayService {
     }
 
     private static void validate(Dataset dataset, Split split, List<Instant> cutoffs) {
-        var calendar = dataset.outcomeCalendar().calendar();
-        if (!calendar.covers(split.training().first(), split.outOfSample().last())
-                || dataset.outcomeCalendar().availableAt().isAfter(dataset.outcomeFreeze())) {
-            throw new IllegalArgumentException("Outcome calendar coverage or availability is insufficient");
-        }
-        if (gap(calendar, split.training(), split.validation()) < split.embargoSessions()
-                || gap(calendar, split.validation(), split.outOfSample()) < split.embargoSessions()) {
-            throw new IllegalArgumentException("Replay partitions overlap or have insufficient session embargo");
-        }
+        validateOutcomeCalendar(dataset.outcomeCalendar(), dataset.outcomeFreeze(), split);
         if (cutoffs.stream().distinct().count() != cutoffs.size()
                 || cutoffs.stream().anyMatch(cutoff -> cutoff.isAfter(dataset.outcomeFreeze()))
                 || dataset.frames().stream().map(frame -> List.of(frame.asOf(), frame.availableAt())).distinct().count()
                         != dataset.frames().size()) {
             throw new IllegalArgumentException("Ambiguous vintage, repeated cutoff, or cutoff after outcome freeze");
+        }
+    }
+
+    static void validateOutcomeCalendar(LiquidUniverse.CalendarReference reference, Instant freeze, Split split) {
+        var calendar = reference.calendar();
+        if (!calendar.covers(split.training().first(), split.outOfSample().last())
+                || reference.availableAt().isAfter(freeze)) {
+            throw new IllegalArgumentException("Outcome calendar coverage or availability is insufficient");
+        }
+        if (gap(calendar, split.training(), split.validation()) < split.embargoSessions()
+                || gap(calendar, split.validation(), split.outOfSample()) < split.embargoSessions()) {
+            throw new IllegalArgumentException("Replay partitions overlap or have insufficient session embargo");
         }
     }
 
@@ -155,9 +159,9 @@ public class HistoricalReplayService {
         return time != null && time.isAfter(cutoff);
     }
 
-    private static void evaluateOutcomes(Decision decision, Frame frame, Window window, VersionedIdxCalendar realized,
+    static void evaluateOutcomes(Decision decision, Frame frame, Window window, VersionedIdxCalendar realized,
                                          Map<BarKey, List<SessionBar>> outcomes, Costs costs, Instant freeze,
-                                         List<Observation> observations) {
+                                         List<Observation> observations, boolean requireMatchedCalendar) {
         var cutoff = decision.cutoff();
         var plannedCalendar = frame.calendar().calendar();
         var planned = firstOpen(plannedCalendar, cutoff, window.last());
@@ -169,6 +173,9 @@ public class HistoricalReplayService {
                 Arm.SYNTHETIC_IHSG, List.of(BENCHMARK_SYMBOL));
         for (int horizon : HORIZONS) {
             var path = path(planned, actual, realized, window.last(), horizon);
+            if (requireMatchedCalendar && path.reason() == null) {
+                path = verifyHoldingCalendar(path, plannedCalendar, realized);
+            }
             for (var arm : Arm.values()) {
                 for (var symbol : arms.get(arm)) {
                     var trade = new Trade(decision, arm, symbol, horizon, path);
@@ -207,6 +214,19 @@ public class HistoricalReplayService {
         }
         var exit = sessions.getLast();
         return new Path(planned.date(), exit, sessions, null, null);
+    }
+
+    private static Path verifyHoldingCalendar(Path path, VersionedIdxCalendar planned, VersionedIdxCalendar realized) {
+        for (var date : path.entry().datesUntil(path.exit().plusDays(1)).toList()) {
+            if (!planned.covers(date, date)) {
+                return new Path(path.entry(), path.exit(), path.sessions(), date, CALENDAR_COVERAGE);
+            }
+            if (!planned.sessionOpen(date).equals(realized.sessionOpen(date))
+                    || !planned.sessionClose(date).equals(realized.sessionClose(date))) {
+                return new Path(path.entry(), path.exit(), path.sessions(), date, HOLDING_CALENDAR_CHANGED);
+            }
+        }
+        return path;
     }
 
     private static Observation simulate(Trade trade, Frame frame, VersionedIdxCalendar calendar,
@@ -303,10 +323,10 @@ public class HistoricalReplayService {
         return row.action() == CorporateAction.NONE ? new Bar(row, null) : new Bar(row, CORPORATE_ACTION);
     }
 
-    private static Map<BarKey, List<SessionBar>> outcomeIndex(Dataset dataset) {
+    static Map<BarKey, List<SessionBar>> outcomeIndex(List<SessionBar> outcomes, Instant freeze) {
         var rows = new HashMap<BarKey, List<SessionBar>>();
-        for (var row : dataset.outcomes()) {
-            if (!row.availableAt().isAfter(dataset.outcomeFreeze())) {
+        for (var row : outcomes) {
+            if (!row.availableAt().isAfter(freeze)) {
                 rows.computeIfAbsent(new BarKey(row.symbol(), row.date()), ignored -> new ArrayList<>()).add(row);
             }
         }
@@ -366,7 +386,7 @@ public class HistoricalReplayService {
         return values.isEmpty() ? null : divide(values.stream().reduce(ZERO, BigDecimal::add), n(values.size()));
     }
 
-    private static Partition partition(Split split, LocalDate date) {
+    static Partition partition(Split split, LocalDate date) {
         for (var partition : Partition.values()) {
             if (window(split, partition).includes(date)) {
                 return partition;
@@ -375,7 +395,7 @@ public class HistoricalReplayService {
         return null;
     }
 
-    private static Window window(Split split, Partition partition) {
+    static Window window(Split split, Partition partition) {
         return switch (partition) {
             case TRAIN -> split.training();
             case VALIDATION -> split.validation();
@@ -395,7 +415,7 @@ public class HistoricalReplayService {
         return value != null && value.signum() > 0;
     }
 
-    private static BigDecimal divide(BigDecimal numerator, BigDecimal denominator) {
+    static BigDecimal divide(BigDecimal numerator, BigDecimal denominator) {
         return numerator.divide(denominator, MathContext.DECIMAL128);
     }
 
@@ -403,7 +423,7 @@ public class HistoricalReplayService {
         return BigDecimal.valueOf(value);
     }
 
-    private record BarKey(String symbol, LocalDate date) {}
+    record BarKey(String symbol, LocalDate date) {}
     private record MetricKey(Partition partition, Arm arm, int horizon) {}
     private record Open(LocalDate date, Instant instant, Reason reason) {}
     private record Path(LocalDate entry, LocalDate exit, List<LocalDate> sessions, LocalDate failedAt, Reason reason) {}

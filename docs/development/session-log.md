@@ -934,3 +934,7 @@ Baseline `e4972f5`. Menambahkan audit histori offline per cutoff dengan lookback
 ## 2026-11-22 — PhiveAlpha Phase 1O-B (lokal)
 
 Baseline `a9756ba`. Menambah workflow point-in-time internal dengan context immutable, preflight readiness, audit dan scoring pada cakupan yang sama, serta laporan deterministik. Reader development mempertahankan provenance candle. Rute fixture dan replay mempertahankan kontraknya. Runner PostgreSQL daily-ingestion dan screener berhenti saat probe loopback sebelum klaster dibuat. Maven offline 122 lulus, termasuk 10 tes baru, dan satu skip loopback. [Handoff Phase 1O-B](phivealpha-phase-1o-b.md)
+
+## 2026-11-22 — PhiveAlpha Phase 1O-C (lokal)
+
+Baseline `80bcb2f`. Menambah evaluasi forward shortlist dengan simulator replay, IHSG berpasangan, excess return, biaya, drawdown, dan gate cakupan per partisi dan horizon. Input screening diproses terpisah dari outcome freeze. Runner PostgreSQL terisolasi tertahan probe loopback. Maven offline 133 lulus, termasuk 11 tes baru, dan satu skip loopback. [Handoff Phase 1O-C](phivealpha-phase-1o-c.md)
