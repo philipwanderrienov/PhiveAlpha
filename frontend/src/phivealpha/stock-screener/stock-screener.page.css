@@ -117,3 +117,25 @@
 .provenance-note ul { margin:0; padding-left:1.2rem; }
 @media(max-width:46rem) { .provenance-grid { grid-template-columns:1fr; } .provenance-overview small { margin-left:0; width:100%; } .provenance-trigger { padding:.9rem; gap:.5rem; } .provenance-icon { flex-basis:2rem; height:2rem; } .provenance-pill { padding:.3rem .5rem; } }
 @media(prefers-reduced-motion:reduce) { .provenance-chevron { transition:none; } }
+
+/* Phase 1Q — momentum belongs in the first scan, not nested disclosures. */
+.shortlist-explainer { margin:.2rem 0 .9rem; font-size:.8rem; }
+.candidate-card { grid-template-columns:minmax(0,1fr) minmax(10.25rem,auto) auto auto; }
+.candidate-card app-momentum-snapshot { grid-column:2; min-width:0; }
+.candidate-card .score { grid-column:3; }
+.candidate-card .candidate-action { grid-column:4; }
+#research-detail > app-momentum-snapshot { margin:0; }
+@media(min-width:36rem) {
+  .candidate-card { grid-template-columns:minmax(0,1fr) minmax(11.75rem,auto) minmax(4rem,auto) auto; }
+}
+@media(max-width:49rem) {
+  .candidate-card { grid-template-columns:minmax(0,1fr) auto; gap:.65rem; }
+  .candidate-card app-momentum-snapshot { grid-column:1/-1; grid-row:2; border-top:1px solid var(--border); padding-top:.65rem; }
+  .candidate-card .score { grid-column:2; grid-row:1; }
+  .candidate-card .candidate-action { grid-column:1/-1; grid-row:3; justify-self:stretch; }
+}
+@media(max-width:23rem) {
+  .candidate-card .score { grid-column:2; grid-row:1; }
+  .candidate-card app-momentum-snapshot { grid-row:2; }
+  .candidate-card .candidate-action { grid-row:3; }
+}
