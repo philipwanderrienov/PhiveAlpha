@@ -37,3 +37,55 @@
 @media (min-width: 74rem) {
   .candidate-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+
+/* Phase 1Q — editorial research shortlist with table-like density. */
+.snapshot-strip {
+  align-items: center;
+  padding: 1.1rem 1.35rem;
+  border-inline-start: 0;
+  background: #f0f7f3;
+  box-shadow: none;
+}
+.snapshot-strip strong { font-size: 1.2rem; letter-spacing: -.03em; }
+.snapshot-strip .meta { font-size: .78rem; }
+.candidate-grid { gap: .45rem; }
+.candidate-card {
+  border-radius: .82rem;
+  padding: .75rem .95rem;
+  gap: .7rem;
+  box-shadow: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.candidate-card:hover { background: #fbfdfb; border-color: #b8d6c5; }
+.candidate-title { gap: .65rem; }
+.candidate-title .rank-mark {
+  border-radius: .65rem;
+  background: #edf5f0;
+  color: #245f45;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  font-size: .72rem;
+}
+.candidate-symbol { font-size: 1.02rem; letter-spacing: -.025em; }
+.candidate-company { color: #687b70; font-size: .77rem; }
+.score { gap: .18rem; }
+.score small { font-size: .67rem; color: var(--muted); }
+.score data { font-size: 1.08rem; letter-spacing: -.025em; }
+.candidate-action { border-radius: .7rem; padding-inline: .8rem; }
+.research-hero { background: linear-gradient(120deg, #edf7ef, #ffffff); border-color: #d9eadc; }
+.research-meta .badge { background: #fff; border: 1px solid #dce9df; }
+.score-note { color: var(--muted); font-size: .8rem; }
+@media (min-width: 36rem) {
+  .candidate-grid { grid-template-columns: 1fr; }
+  .candidate-card { grid-template-columns: minmax(0, 1fr) minmax(5rem, auto) auto; padding: 1rem 1.2rem; }
+}
+@media (min-width: 74rem) {
+  .candidate-grid { grid-template-columns: 1fr; }
+  .candidate-card { max-width: none; }
+  .candidate-company { font-size: .86rem; }
+}
+@media (max-width: 23rem) {
+  .candidate-card { grid-template-columns: minmax(0,1fr) auto; }
+  .candidate-action { grid-column: 1 / -1; justify-self: stretch; }
+}
