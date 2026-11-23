@@ -18,6 +18,7 @@
         <p class="meta score-note">{{ scoreExplanation }}</p>
       }
     </header>
+    <app-momentum-snapshot [assessment]="assessment" [snapshotQuality]="quality" />
     <app-screener-detail [decision]="candidate.decision" [assessment]="assessment"
       [showScores]="canShowScores(assessment)" [snapshotQuality]="quality" />
     <a class="page-link" routerLink="/stock-analysis" [queryParams]="{symbol: assessment.symbol}">Lihat harga dan perubahan mingguan <span aria-hidden="true">→</span></a>
@@ -64,6 +65,7 @@
 
       <section aria-labelledby="shortlist-heading">
         <h2 class="section-heading" id="shortlist-heading" tabindex="-1" #shortlistHeading>Kandidat riset</h2>
+        <p class="meta shortlist-explainer">Momentum 5 dan 10 sesi terlihat langsung di tiap kandidat. Perubahan historis bukan rekomendasi entry.</p>
         @if (hasVisibleScores()) {
           <p class="meta score-note" id="shortlist-score-note">{{ scoreExplanation }}</p>
         }
@@ -78,6 +80,7 @@
                 </div>
                 <p class="meta candidate-company">{{ names().get(assessment.symbol) ?? 'Nama emiten belum tersedia' }}</p>
               </div>
+              <app-momentum-snapshot [assessment]="assessment" [snapshotQuality]="data.quality" [compact]="true" />
               @if (canShowScores(assessment) && assessment.overallScore !== null) {
                 <div class="score numeric">
                   <small>Skor riset</small>
