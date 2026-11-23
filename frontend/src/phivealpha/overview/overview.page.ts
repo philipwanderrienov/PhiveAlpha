@@ -86,6 +86,12 @@ import { MomentumSnapshot } from '../stock-screener/momentum-snapshot';
                   </div>
                 </div>
                 <app-momentum-snapshot [assessment]="assessment" [snapshotQuality]="data.quality" [compact]="true" />
+                <div class="trade-levels" aria-label="Perencanaan harga masuk dan keluar">
+                  <span class="trade-level"><small>Entry</small><strong>—</strong></span>
+                  <span class="trade-level"><small>TP</small><strong>—</strong></span>
+                  <span class="trade-level"><small>SL</small><strong>—</strong></span>
+                  <span class="trade-level-status">Setup belum dihitung</span>
+                </div>
                 <div class="watchlist-score">
                   <span class="mobile-label">Skor riset</span>
                   @if (canShowScores(assessment) && assessment.overallScore !== null) {
@@ -106,6 +112,25 @@ import { MomentumSnapshot } from '../stock-screener/momentum-snapshot';
           <p class="watchlist-footnote">Momentum masa lalu bukan prediksi harga dan bukan rekomendasi entry. Skor disembunyikan jika snapshot tidak memenuhi syarat kualitas.</p>
         </div>
       }
+    </section>
+
+    <section class="workspace-section trade-plan-explainer" aria-labelledby="trade-planning-heading">
+      <div class="workspace-section-head">
+        <div>
+          <p class="section-label">TRADE PLANNING</p>
+          <h2 id="trade-planning-heading">Entry, target profit & stop loss</h2>
+          <p class="workspace-help">Rencana harga akan tampil per emiten setelah engine setup tervalidasi. Saat ini belum ada level entry otomatis.</p>
+        </div>
+        <a class="workspace-link" routerLink="/paper-trading">Simulasi modal <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="trade-plan-preview" role="note">
+        <div class="trade-plan-icon" aria-hidden="true">◎</div>
+        <div>
+          <strong>Trade setup belum tersedia</strong>
+          <p>Entry zone, TP, SL, risk/reward, dan validitas setup menunggu perhitungan backend. Harga penutupan dan momentum tidak dipakai sebagai pengganti sinyal beli.</p>
+        </div>
+        <span class="trade-plan-pill">Research only</span>
+      </div>
     </section>
 
     <div class="workspace-bottom">
