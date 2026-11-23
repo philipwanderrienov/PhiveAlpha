@@ -5,9 +5,10 @@ import { RouterLink } from '@angular/router';
 import { IdxApi } from '../core/idx-api';
 import type { Assessment, ScreeningQuality } from '../core/stock-screener';
 import { ScreenerDetail } from './screener-detail';
+import { MomentumSnapshot } from './momentum-snapshot';
 
 @Component({
-  imports: [DatePipe, DecimalPipe, RouterLink, ScreenerDetail],
+  imports: [DatePipe, DecimalPipe, RouterLink, ScreenerDetail, MomentumSnapshot],
   templateUrl: './stock-screener.page.html',
   styleUrl: './stock-screener.page.css',
 })
