@@ -42,5 +42,9 @@ Next unblockers: establish verified point-in-time corporate-action adjustments, 
 
 `SwingTradeMarketRules` validates source/version, point-in-time availability and effective date in the Asia/Jakarta timezone, symbol, positive board lot, nonoverlapping tick price bands, and entry/stop/target alignment against their **individual** bands. Seven fixture-based tests cover positive and fail-closed cases. No real IDX bands are embedded or assumed; the fixture values are artificial. An independently sourced, effective-dated rule dataset, adjusted-price audit and a validated connection from this check to `SwingTradeSetup` are still required before displaying levels. No public API or UI signals were activated.
 
+## Phase 1R-B3: Tick-band-aware rounding (pending host validation)
+
+Added `SwingTradeMarketRules.validateReference` (standalone provenance and rule-structure preflight) and `SwingTradeTickRounding` (UP/DOWN tick rounding across all versioned bands). The rule for a candidate price is selected **at its resulting price band**, not blindly from an entry reference tick. Six synthetic tests cover ranges, boundary crossings, unchanged exact ticks, future/unverified rules, and withheld prices. This is an isolated offline utility; neither the historical readiness gate nor the production trade setup/API/Overview uses it yet. The broader adjusted-price, historical corporate-action and execution-cost blockers remain, and all UI price placeholders must remain withheld.
+
 ## Next engineering handoff
 Audit existing domain models, choose deterministic policy and tick-size rules supported by verified historical IDX data, implement versioned service + tests, wire read-only endpoint, then replace UI placeholders only after host validation and out-of-sample checks. Keep UI design branch separate from production.
