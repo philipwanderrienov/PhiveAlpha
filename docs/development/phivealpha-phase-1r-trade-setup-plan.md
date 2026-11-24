@@ -38,5 +38,9 @@ Overview watchlist exposes per-symbol entry/TP/SL directly. Before a valid polic
 
 Next unblockers: establish verified point-in-time corporate-action adjustments, prove adjusted historical-price readiness and session evidence; add exchange-verified tick schedule by price/date, trading permissions and lot size, fees/spread/slippage with realistic executions and walk-forward out-of-sample checks. Only then wire a read-only API returning versioned status and nullable levels.
 
+## Phase 1R-B2: Exchange-rule reference validator (pending host test)
+
+`SwingTradeMarketRules` validates source/version, point-in-time availability and effective date in the Asia/Jakarta timezone, symbol, positive board lot, nonoverlapping tick price bands, and entry/stop/target alignment against their **individual** bands. Seven fixture-based tests cover positive and fail-closed cases. No real IDX bands are embedded or assumed; the fixture values are artificial. An independently sourced, effective-dated rule dataset, adjusted-price audit and a validated connection from this check to `SwingTradeSetup` are still required before displaying levels. No public API or UI signals were activated.
+
 ## Next engineering handoff
 Audit existing domain models, choose deterministic policy and tick-size rules supported by verified historical IDX data, implement versioned service + tests, wire read-only endpoint, then replace UI placeholders only after host validation and out-of-sample checks. Keep UI design branch separate from production.
