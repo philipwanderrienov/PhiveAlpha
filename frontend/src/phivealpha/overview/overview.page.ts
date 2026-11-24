@@ -72,7 +72,7 @@ import { MomentumSnapshot } from '../stock-screener/momentum-snapshot';
             <span>Data {{ data.mode === 'FIXTURE' ? 'sintetis' : 'development' }} · Riset saja</span>
           </div>
           <div class="watchlist-columns" aria-hidden="true">
-            <span>Emiten / peringkat</span><span>Momentum historis</span><span>Skor riset</span><span>Risiko</span>
+            <span>Emiten</span><span>Harga acuan</span><span>Momentum 5 / 10 sesi</span><span>Skor</span><span>Risiko</span><span>Trade setup</span><span></span>
           </div>
           <ol class="watchlist-rows">
             @for (candidate of candidates(); track candidate.assessment.symbol) {
@@ -85,24 +85,32 @@ import { MomentumSnapshot } from '../stock-screener/momentum-snapshot';
                     <small>{{ names().get(assessment.symbol) ?? 'Nama emiten belum tersedia' }}</small>
                   </div>
                 </div>
-                <app-momentum-snapshot [assessment]="assessment" [snapshotQuality]="data.quality" [compact]="true" />
-                <div class="trade-levels" aria-label="Perencanaan harga masuk dan keluar">
-                  <span class="trade-level"><small>Entry</small><strong>—</strong></span>
-                  <span class="trade-level"><small>TP</small><strong>—</strong></span>
-                  <span class="trade-level"><small>SL</small><strong>—</strong></span>
-                  <span class="trade-level-status">Setup belum dihitung</span>
+                <div class="watchlist-price">
+                  <small class="mobile-label">Penutupan simulasi</small>
+                  @if (prices().get(assessment.symbol); as stock) {
+                    <strong>{{ stock.closeIdr | currency:'IDR':'symbol':'1.0-0' }}</strong>
+                    <small>{{ stock.sessionDate | date:'d MMM y':'UTC' }}</small>
+                  } @else {
+                    <strong>—</strong><small>Belum tersedia</small>
+                  }
                 </div>
+                <app-momentum-snapshot [assessment]="assessment" [snapshotQuality]="data.quality" [compact]="true" />
                 <div class="watchlist-score">
-                  <span class="mobile-label">Skor riset</span>
+                  <small class="mobile-label">Skor riset</small>
                   @if (canShowScores(assessment) && assessment.overallScore !== null) {
                     <strong>{{ assessment.overallScore | number:'1.0-2':'id-ID' }}</strong>
                   } @else { <strong>—</strong> }
                 </div>
                 <div class="watchlist-risk" [attr.data-risk]="assessment.riskNotes.length ? 'warning' : 'neutral'">
-                  {{ assessment.riskNotes.length ? 'Ada catatan risiko' : 'Tidak ada catatan khusus' }}
+                  {{ assessment.riskNotes.length ? 'Ada catatan risiko' : 'Belum ada flag risiko model' }}
                 </div>
-                <a class="watchlist-open" routerLink="/stock-screener" [attr.aria-label]="'Buka screener untuk riset ' + assessment.symbol">
-                  Riset <span aria-hidden="true">↗</span>
+                <div class="watchlist-setup">
+                  <strong>Entry · TP · SL</strong>
+                  <span>— · — · —</span>
+                  <small>Belum dihitung</small>
+                </div>
+                <a class="watchlist-open" routerLink="/stock-screener" [queryParams]="{ symbol: assessment.symbol }" [attr.aria-label]="'Buka riset ' + assessment.symbol">
+                  Detail <span aria-hidden="true">↗</span>
                 </a>
               </li>
             } @empty {
@@ -208,6 +216,10 @@ export class OverviewPage {
 
   protected readonly names = computed(() => new Map(
     (this.stocks.hasValue() ? this.stocks.value() : []).map(stock => [stock.symbol, stock.name]),
+  ));
+
+  protected readonly prices = computed(() => new Map(
+    (this.stocks.hasValue() ? this.stocks.value() : []).map(stock => [stock.symbol, stock]),
   ));
 
   protected readonly candidates = computed(() => this.screening.hasValue()
