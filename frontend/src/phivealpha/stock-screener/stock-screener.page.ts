@@ -1,18 +1,20 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, afterNextRender, computed, ElementRef, inject, Injector, signal, ViewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IdxApi } from '../core/idx-api';
 import type { Assessment, ScreeningQuality } from '../core/stock-screener';
 import { ScreenerDetail } from './screener-detail';
+import { MomentumSnapshot } from './momentum-snapshot';
 
 @Component({
-  imports: [DatePipe, DecimalPipe, RouterLink, ScreenerDetail],
+  imports: [DatePipe, DecimalPipe, RouterLink, ScreenerDetail, MomentumSnapshot],
   templateUrl: './stock-screener.page.html',
   styleUrl: './stock-screener.page.css',
 })
 export class StockScreenerPage {
   private readonly api = inject(IdxApi);
+  private readonly route = inject(ActivatedRoute);
   protected readonly snapshot = rxResource({ stream: () => this.api.stockScreener() });
   private readonly injector = inject(Injector);
   private readonly catalog = rxResource({ stream: () => this.api.stocks() });
@@ -50,7 +52,9 @@ export class StockScreenerPage {
     ({ assessment }) => assessment.overallScore !== null && this.canShowScores(assessment),
   ));
   protected readonly scoreExplanation = 'Skor berasal dari model riset, bukan probabilitas keuntungan atau sinyal beli/jual.';
-  protected readonly selectedSymbol = signal<string | null>(null);
+  protected readonly selectedSymbol = signal<string | null>(
+    this.route.snapshot.queryParamMap.get('symbol')?.toUpperCase() ?? null,
+  );
   protected readonly selectedCandidate = computed(() => this.candidates().find(
     candidate => candidate.assessment.symbol === this.selectedSymbol(),
   ));

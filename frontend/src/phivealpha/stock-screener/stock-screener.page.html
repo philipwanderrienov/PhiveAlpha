@@ -18,6 +18,7 @@
         <p class="meta score-note">{{ scoreExplanation }}</p>
       }
     </header>
+    <app-momentum-snapshot [assessment]="assessment" [snapshotQuality]="quality" />
     <app-screener-detail [decision]="candidate.decision" [assessment]="assessment"
       [showScores]="canShowScores(assessment)" [snapshotQuality]="quality" />
     <a class="page-link" routerLink="/stock-analysis" [queryParams]="{symbol: assessment.symbol}">Lihat harga dan perubahan mingguan <span aria-hidden="true">→</span></a>
@@ -64,6 +65,7 @@
 
       <section aria-labelledby="shortlist-heading">
         <h2 class="section-heading" id="shortlist-heading" tabindex="-1" #shortlistHeading>Kandidat riset</h2>
+        <p class="meta shortlist-explainer">Momentum 5 dan 10 sesi terlihat langsung di tiap kandidat. Perubahan historis bukan rekomendasi entry.</p>
         @if (hasVisibleScores()) {
           <p class="meta score-note" id="shortlist-score-note">{{ scoreExplanation }}</p>
         }
@@ -78,6 +80,7 @@
                 </div>
                 <p class="meta candidate-company">{{ names().get(assessment.symbol) ?? 'Nama emiten belum tersedia' }}</p>
               </div>
+              <app-momentum-snapshot [assessment]="assessment" [snapshotQuality]="data.quality" [compact]="true" />
               @if (canShowScores(assessment) && assessment.overallScore !== null) {
                 <div class="score numeric">
                   <small>Skor riset</small>
@@ -110,17 +113,34 @@
         </section>
       }
 
-      <details class="panel disclosure">
-        <summary>Sumber dan waktu data</summary>
+      <details class="panel disclosure provenance-accordion">
+        <summary class="provenance-trigger">
+          <span class="provenance-icon" aria-hidden="true">▦</span>
+          <span class="provenance-heading"><strong>Sumber & waktu data</strong><small>Snapshot, sumber referensi, dan batas waktu riset</small></span>
+          <span class="provenance-pill">{{ data.mode === 'FIXTURE' ? 'Simulasi' : data.mode }}</span>
+          <span class="provenance-chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="provenance-body">
+        <div class="provenance-overview">
+          <span class="badge" [class.state-warning]="data.quality !== 'COMPLETE'">{{ qualityLabels[data.quality] }}</span>
+          <span class="badge">{{ data.mode === 'FIXTURE' ? 'Data sintetis' : data.mode }}</span>
+          <small>Untuk riset, bukan sinyal beli/jual.</small>
+        </div>
+        <div class="provenance-grid">
+        <section class="provenance-card">
+          <h3>◷ Snapshot data</h3>
         <dl>
           <dt>Mode</dt><dd>{{ data.mode }}</dd>
           <dt>Kualitas</dt><dd>{{ data.quality }}</dd>
           <dt>Data per (UTC)</dt><dd>{{ data.dataAsOf ?? 'Belum tersedia' }}</dd>
           <dt>Dibuat (UTC)</dt><dd>{{ data.generatedAt }}</dd>
           <dt>Batas waktu riset (UTC)</dt><dd>{{ data.cutoff }}</dd>
-          <dt>Model riset</dt><dd>{{ data.scoring?.modelVersion ?? 'Belum tersedia' }}</dd>
           @if (data.failure) { <dt>Kode kegagalan</dt><dd>{{ data.failure }}</dd> }
         </dl>
+        </section>
+        <section class="provenance-card">
+          <h3>◈ Model & provenance</h3>
+          <dl><dt>Model riset</dt><dd>{{ data.scoring?.modelVersion ?? 'Belum tersedia' }}</dd></dl>
       @if (data.liquidity; as reference) {
         <dl>
           <dt>Universe</dt><dd>{{ reference.universeSource ? reference.universeSource + ' · ' + reference.universeVersion : 'Belum tersedia' }}</dd>
@@ -140,15 +160,18 @@
       } @else {
         <p>Provenance belum tersedia.</p>
       }
+        </section>
+        </div>
       @let reasons = data.scoring?.reasons ?? [];
       @if (reasons.length) {
-        <h3>Alasan penilaian snapshot</h3>
+        <section class="provenance-note"><h3>Catatan penilaian snapshot</h3>
         <ul>
           @for (reason of reasons; track reason) {
             <li>{{ reason }}</li>
           }
-        </ul>
+        </ul></section>
       }
+        </div>
       </details>
     </div>
   }

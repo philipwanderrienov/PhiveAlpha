@@ -29,20 +29,34 @@
     </ul>
   </section>
 }
-<details class="panel disclosure technical">
-  <summary>{{ excluded ? 'Rincian keputusan' : 'Rincian faktor dan sumber' }}</summary>
+<details class="panel disclosure technical modern-accordion">
+  <summary class="accordion-trigger">
+    <span class="accordion-icon" aria-hidden="true">◈</span>
+    <span class="accordion-heading">
+      <strong>{{ excluded ? 'Rincian keputusan' : 'Faktor & bukti riset' }}</strong>
+      <small>{{ excluded ? 'Status, likuiditas, dan alasan penolakan' : 'Perhitungan faktor, risiko, dan sumber data' }}</small>
+    </span>
+    <span class="accordion-status">{{ excluded ? (decision?.status ?? 'UNVERIFIED') : snapshotQuality }}</span>
+    <span class="accordion-chevron" aria-hidden="true">⌄</span>
+  </summary>
+  <div class="accordion-body">
+    <div class="accordion-stats">
+      <div><span>Status screening</span><strong>{{ decision?.status ?? 'Belum tersedia' }}</strong></div>
+      <div><span>Kualitas snapshot</span><strong>{{ snapshotQuality }}</strong></div>
+      <div><span>Faktor tersedia</span><strong>{{ assessment?.factors?.length ?? 0 }}</strong></div>
+    </div>
   @if (decision; as decision) { <p class="meta">Status penyaringan {{ decision.status }}</p> }
 
-  <h3>Pemeriksaan likuiditas</h3>
+  <section class="accordion-section"><h3>Pemeriksaan likuiditas</h3>
   @if (decision?.liquidity; as result) {
-    <p>{{ result.eligibility }} · {{ result.dataQuality }}</p>
+    <div class="accordion-chips"><span>{{ result.eligibility }}</span><span>{{ result.dataQuality }}</span></div>
     @if (result.completeness.evaluated) {
-      <p>Candle valid {{ result.completeness.validCandles }} / {{ result.completeness.expectedSessions }} sesi</p>
+      <p class="accordion-highlight">Cakupan candle <strong>{{ result.completeness.validCandles }} / {{ result.completeness.expectedSessions }} sesi</strong></p>
     } @else {
       <p>Kelengkapan candle belum dievaluasi.</p>
     }
     @if (result.liquidity; as metrics) {
-      <dl>
+      <dl class="accordion-key-values">
         <dt>Nilai transaksi sesi terakhir (IDR)</dt><dd>{{ metrics.latestDailyTurnoverIdr }}</dd>
         <dt>Nilai tengah transaksi harian (IDR)</dt><dd>{{ metrics.medianDailyTurnoverIdr }}</dd>
         <dt>Volume sesi terakhir</dt><dd>{{ metrics.latestDailyVolumeShares }} saham</dd>
@@ -71,9 +85,10 @@
     <p>Masalah momentum · {{ issue.reason }} @if (issue.tradingDate) { · {{ issue.tradingDate }} }</p>
   }
 
-  <h3>Perhitungan dan bukti</h3>
+  </section>
+  <section class="accordion-section"><h3>Perhitungan dan bukti</h3>
   @if (assessment; as assessment) {
-    <p>{{ assessment.status }} · {{ assessment.dataQuality }} · {{ assessment.confidence }}</p>
+    <div class="accordion-chips"><span>{{ assessment.status }}</span><span>{{ assessment.dataQuality }}</span><span>{{ assessment.confidence }}</span></div>
     @if (showScores && assessment.overallScore !== null) {
       <dl><dt>Nilai asli skor riset</dt><dd>{{ assessment.overallScore }}</dd></dl>
     }
@@ -87,7 +102,12 @@
       @for (factor of assessment.factors; track factor.factor) {
         <li>
           <details class="disclosure factor-evidence">
-            <summary>{{ factors[factor.factor].label }}</summary>
+            <summary class="factor-summary">
+              <span><strong>{{ factors[factor.factor].label }}</strong><small>{{ factors[factor.factor].description }}</small></span>
+              <span class="factor-status">{{ factor.quality }}</span>
+              <span class="accordion-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="factor-content">
             <p>{{ factors[factor.factor].description }}</p>
             <p>{{ factor.quality }} · Bobot {{ factor.weightPct }}%</p>
             @if (showScores && factor.quality === 'AVAILABLE' && factor.score !== null) {
@@ -125,6 +145,7 @@
             } @else {
               <p>Provenance faktor belum tersedia.</p>
             }
+            </div>
           </details>
         </li>
       } @empty {
@@ -134,4 +155,6 @@
   } @else {
     <p>Penilaian faktor belum tersedia.</p>
   }
+  </section>
+  </div>
 </details>

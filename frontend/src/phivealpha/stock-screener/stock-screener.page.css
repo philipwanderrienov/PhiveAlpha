@@ -37,3 +37,105 @@
 @media (min-width: 74rem) {
   .candidate-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+
+/* Phase 1Q — editorial research shortlist with table-like density. */
+.snapshot-strip {
+  align-items: center;
+  padding: 1.1rem 1.35rem;
+  border-inline-start: 0;
+  background: #f0f7f3;
+  box-shadow: none;
+}
+.snapshot-strip strong { font-size: 1.2rem; letter-spacing: -.03em; }
+.snapshot-strip .meta { font-size: .78rem; }
+.candidate-grid { gap: .45rem; }
+.candidate-card {
+  border-radius: .82rem;
+  padding: .75rem .95rem;
+  gap: .7rem;
+  box-shadow: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.candidate-card:hover { background: #fbfdfb; border-color: #b8d6c5; }
+.candidate-title { gap: .65rem; }
+.candidate-title .rank-mark {
+  border-radius: .65rem;
+  background: #edf5f0;
+  color: #245f45;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  font-size: .72rem;
+}
+.candidate-symbol { font-size: 1.02rem; letter-spacing: -.025em; }
+.candidate-company { color: #687b70; font-size: .77rem; }
+.score { gap: .18rem; }
+.score small { font-size: .67rem; color: var(--muted); }
+.score data { font-size: 1.08rem; letter-spacing: -.025em; }
+.candidate-action { border-radius: .7rem; padding-inline: .8rem; }
+.research-hero { background: linear-gradient(120deg, #edf7ef, #ffffff); border-color: #d9eadc; }
+.research-meta .badge { background: #fff; border: 1px solid #dce9df; }
+.score-note { color: var(--muted); font-size: .8rem; }
+@media (min-width: 36rem) {
+  .candidate-grid { grid-template-columns: 1fr; }
+  .candidate-card { grid-template-columns: minmax(0, 1fr) minmax(5rem, auto) auto; padding: 1rem 1.2rem; }
+}
+@media (min-width: 74rem) {
+  .candidate-grid { grid-template-columns: 1fr; }
+  .candidate-card { max-width: none; }
+  .candidate-company { font-size: .86rem; }
+}
+@media (max-width: 23rem) {
+  .candidate-card { grid-template-columns: minmax(0,1fr) auto; }
+  .candidate-action { grid-column: 1 / -1; justify-self: stretch; }
+}
+
+/* Phase 1Q — provenance cards */
+.provenance-accordion { padding:0; overflow:hidden; border-radius:1.1rem; }
+.provenance-trigger { display:flex; align-items:center; gap:.8rem; padding:1.1rem; list-style:none; cursor:pointer; }
+.provenance-trigger::-webkit-details-marker { display:none; }
+.provenance-trigger::marker { content:""; }
+.provenance-icon { display:grid; place-items:center; flex:0 0 2.5rem; height:2.5rem; border-radius:.8rem; background:#e7f4ec; color:#0d805a; font-size:1.2rem; }
+.provenance-heading { display:grid; gap:.2rem; flex:1; min-width:0; }
+.provenance-heading strong { font-size:1rem; }
+.provenance-heading small { color:var(--muted); font-size:.74rem; font-weight:450; }
+.provenance-pill { border-radius:999px; padding:.33rem .65rem; background:#edf6f0; color:#24644a; font-size:.72rem; font-weight:700; }
+.provenance-chevron { color:var(--muted); font-size:1.2rem; transition:transform 170ms ease; }
+.provenance-accordion[open] > .provenance-trigger .provenance-chevron { transform:rotate(180deg); }
+.provenance-body { border-top:1px solid var(--border); padding:1rem; }
+.provenance-overview { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-bottom:.85rem; padding:.85rem; border-radius:.8rem; background:#f2f8f3; }
+.provenance-overview small { color:var(--muted); margin-left:auto; }
+.provenance-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
+.provenance-card { min-width:0; padding:1.1rem; border:1px solid var(--border); border-radius:.9rem; overflow-wrap:anywhere; }
+.provenance-card h3 { margin:0 0 .75rem; font-size:1rem; }
+.provenance-card dl { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap:0 .6rem; margin:0; }
+.provenance-card dt, .provenance-card dd { padding:.55rem 0; border-bottom:1px solid #edf1ee; overflow-wrap:anywhere; font-size:.76rem; }
+.provenance-card dd { text-align:end; font-weight:650; }
+.provenance-card ul { padding-left:1.15rem; font-size:.8rem; }
+.provenance-note { margin-top:.9rem; padding:1rem; background:#fafbf9; border:1px solid var(--border); border-radius:.85rem; }
+.provenance-note h3 { margin:0 0 .6rem; }
+.provenance-note ul { margin:0; padding-left:1.2rem; }
+@media(max-width:46rem) { .provenance-grid { grid-template-columns:1fr; } .provenance-overview small { margin-left:0; width:100%; } .provenance-trigger { padding:.9rem; gap:.5rem; } .provenance-icon { flex-basis:2rem; height:2rem; } .provenance-pill { padding:.3rem .5rem; } }
+@media(prefers-reduced-motion:reduce) { .provenance-chevron { transition:none; } }
+
+/* Phase 1Q — momentum belongs in the first scan, not nested disclosures. */
+.shortlist-explainer { margin:.2rem 0 .9rem; font-size:.8rem; }
+.candidate-card { grid-template-columns:minmax(0,1fr) minmax(10.25rem,auto) auto auto; }
+.candidate-card app-momentum-snapshot { grid-column:2; min-width:0; }
+.candidate-card .score { grid-column:3; }
+.candidate-card .candidate-action { grid-column:4; }
+#research-detail > app-momentum-snapshot { margin:0; }
+@media(min-width:36rem) {
+  .candidate-card { grid-template-columns:minmax(0,1fr) minmax(11.75rem,auto) minmax(4rem,auto) auto; }
+}
+@media(max-width:49rem) {
+  .candidate-card { grid-template-columns:minmax(0,1fr) auto; gap:.65rem; }
+  .candidate-card app-momentum-snapshot { grid-column:1/-1; grid-row:2; border-top:1px solid var(--border); padding-top:.65rem; }
+  .candidate-card .score { grid-column:2; grid-row:1; }
+  .candidate-card .candidate-action { grid-column:1/-1; grid-row:3; justify-self:stretch; }
+}
+@media(max-width:23rem) {
+  .candidate-card .score { grid-column:2; grid-row:1; }
+  .candidate-card app-momentum-snapshot { grid-row:2; }
+  .candidate-card .candidate-action { grid-row:3; }
+}
