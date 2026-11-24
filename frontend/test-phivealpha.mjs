@@ -99,7 +99,7 @@ async function renderSnapshot(t, snapshot) {
 test('screener renders loading, transport failure, retry and an empty shortlist', async t => {
   const first = new Subject();
   let attempts = 0;
-  const app = await application([{
+  const app = await application([provideRouter([]), provideLocationMocks(), {
     provide: IdxApi,
     useValue: { stockScreener: () => ++attempts === 1 ? first : of(emptySnapshot), stocks: () => of([]) },
   }]);
