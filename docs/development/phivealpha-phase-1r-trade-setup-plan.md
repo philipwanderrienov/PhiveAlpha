@@ -1,7 +1,7 @@
 # Phase 1R — Swing Trade Setup Engine (proposed; not implemented)
 
 ## Current status
-UI placeholder delivered on Phase 1Q design branch. Backend **does not** currently calculate validated entry, TP, SL, risk/reward, or setup freshness. Historical replay evaluates returns from synthetic sessions; paper trading previews notional buy value. Neither is a live entry-level recommendation.
+UI placeholder delivered on Phase 1Q design branch. Phase 1R-A now includes a **standalone offline experimental calculator** (`com.phivealpha.trade.SwingTradeSetup`) and seven regression tests. It is **not connected to an API or live data** and has not been host-validated. Backend **does not** currently publish validated actionable entry, TP, SL, risk/reward, or setup freshness. Historical replay evaluates returns from synthetic sessions; paper trading previews notional buy value. Neither is a live entry-level recommendation.
 
 ## Research-only contract
 For a given IDX common-stock symbol and point-in-time snapshot, return a versioned **proposal** only when all prerequisites pass:
@@ -32,5 +32,5 @@ Investigate (do not ship without backtesting) a deterministic long-only approach
 ## UX acceptance
 Overview watchlist exposes per-symbol entry/TP/SL directly. Before a valid policy exists, show clear dashes and “Setup belum dihitung”; never show suggested prices based only on momentum. When engine exists, show dated levels, activation status, target, invalidation, costs and risk/reward with an expandable detailed rationale. Display source quality and fixture/research-only status above the fold.
 
-## Next engineering handoff
+## Phase 1R-A experimental prototype\n\nThe pure calculator evaluates exactly 21 ordered trading sessions supplied by a caller, with verified eligibility/reference, explicit tick and lot configuration, adjusted OHLCV, consistent source, no duplicates, and as-of availability before cutoff. Conditional breakout trigger uses the prior 20-session high, a 14-session true-range average, historical support and a two-R take-profit target. All levels are withheld when a gate fails. This is **not a validated strategy**; it does not yet account for executable fills, fees/slippage, verified exchange tick schedules, point-in-time corporate actions, adjusted history suitability, or true IDX market observations. No production endpoint was added. Keep UI placeholders until those dependencies are satisfied and real-data out-of-sample validity is established.\n\n## Next engineering handoff
 Audit existing domain models, choose deterministic policy and tick-size rules supported by verified historical IDX data, implement versioned service + tests, wire read-only endpoint, then replace UI placeholders only after host validation and out-of-sample checks. Keep UI design branch separate from production.
