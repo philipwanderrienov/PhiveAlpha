@@ -41,6 +41,25 @@ public final class SwingTradeMarketRules {
 
     public static Assessment validate(Reference ref, String symbol, Instant cutoff,
                                       BigDecimal entry, BigDecimal stop, BigDecimal target) {
+        var preliminary = validateReference(ref, symbol, cutoff);
+        if (!preliminary.valid()) return preliminary;
+        for (var price : new BigDecimal[] { entry, stop, target }) {
+            if (price == null || price.signum() <= 0) {
+                return rejected(Reason.PRICE_OUTSIDE_TICK_BANDS, ref, cutoff);
+            }
+            var band = ref.bands().stream().filter(b -> price.compareTo(b.fromInclusiveIdr()) >= 0
+                    && (b.toExclusiveIdr() == null || price.compareTo(b.toExclusiveIdr()) < 0))
+                    .findFirst().orElse(null);
+            if (band == null) return rejected(Reason.PRICE_OUTSIDE_TICK_BANDS, ref, cutoff);
+            if (price.remainder(band.tickSizeIdr()).signum() != 0) {
+                return rejected(Reason.PRICE_NOT_ON_TICK, ref, cutoff);
+            }
+        }
+        return preliminary;
+    }
+
+    /** Checks rule provenance, effective dates, symbol, board lot and tick-band structure. */
+    public static Assessment validateReference(Reference ref, String symbol, Instant cutoff) {
         Objects.requireNonNull(cutoff);
         Objects.requireNonNull(symbol);
         if (ref == null) return rejected(Reason.REFERENCE_MISSING, null, cutoff);
@@ -59,18 +78,6 @@ public final class SwingTradeMarketRules {
         if (!symbol.equals(ref.symbol())) return rejected(Reason.SYMBOL_MISMATCH, ref, cutoff);
         if (ref.boardLotShares() <= 0) return rejected(Reason.LOT_SIZE_UNVERIFIED, ref, cutoff);
         if (!validBands(ref.bands())) return rejected(Reason.INVALID_TICK_BANDS, ref, cutoff);
-        for (var price : new BigDecimal[] { entry, stop, target }) {
-            if (price == null || price.signum() <= 0) {
-                return rejected(Reason.PRICE_OUTSIDE_TICK_BANDS, ref, cutoff);
-            }
-            var band = ref.bands().stream().filter(b -> price.compareTo(b.fromInclusiveIdr()) >= 0
-                    && (b.toExclusiveIdr() == null || price.compareTo(b.toExclusiveIdr()) < 0))
-                    .findFirst().orElse(null);
-            if (band == null) return rejected(Reason.PRICE_OUTSIDE_TICK_BANDS, ref, cutoff);
-            if (price.remainder(band.tickSizeIdr()).signum() != 0) {
-                return rejected(Reason.PRICE_NOT_ON_TICK, ref, cutoff);
-            }
-        }
         return new Assessment(true, null, ref.source(), ref.version(), ref.boardLotShares(), date);
     }
 
