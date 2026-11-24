@@ -46,14 +46,16 @@ public final class SwingTradeReadinessGate {
                     Reason.FRAME_NOT_AVAILABLE_AT_CUTOFF);
         }
         var report = audit.audit(request);
-        if (!request.symbols().contains(symbol)
-                || report.equities().stream().noneMatch(row -> row.symbol().equals(symbol)
-                     && row.outcome() == HistoricalDatasetReadiness.Outcome.READY
-                     && row.eligibilityIssue() == null)) {
+        if (!request.symbols().contains(symbol)) {
             return blocked(symbol, report.outcome(), Reason.SYMBOL_NOT_AUDITED);
         }
         if (report.outcome() != HistoricalDatasetReadiness.Outcome.READY) {
             return blocked(symbol, report.outcome(), Reason.HISTORICAL_READINESS_NOT_READY);
+        }
+        if (report.equities().stream().noneMatch(row -> row.symbol().equals(symbol)
+                && row.outcome() == HistoricalDatasetReadiness.Outcome.READY
+                && row.eligibilityIssue() == null)) {
+            return blocked(symbol, report.outcome(), Reason.SYMBOL_NOT_AUDITED);
         }
         // Do not downgrade adjusted/unadjusted without a separate, proven corporate-action audit.
         if (request.priceBasis() != AdjustmentStatus.ADJUSTED) {
