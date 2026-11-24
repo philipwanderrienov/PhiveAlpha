@@ -22,7 +22,7 @@ Checksum semua sumber Java IDX dan handoff 1H dicatat sebelum perubahan. Perubah
 - Build dan CI: `backend/pom.xml`, `frontend/angular.json`, `frontend/package.json`, `frontend/package-lock.json`, `frontend/tsconfig.phivealpha.json`, `.github/workflows/validate.yml`.
 - Aplikasi dan tes: `frontend/src/phivealpha/index.html`, `frontend/test-phivealpha.mjs`, `backend/src/test/java/com/phivealpha/IdxFoundationTest.java`, `backend/src/test/java/com/phivealpha/persistence/IdxPersistenceProfileTest.java`.
 - Runbook: `AGENTS.md`, ketiga `README.md` di root, backend dan frontend, `docs/api/README.md`, `docs/architecture/README.md`, `docs/development/phivealpha-phase-1c.md`.
-- Riwayat dan arsip: `docs/development/current-state.md`, `docs/development/session-log.md`, `docs/development/phivealpha-phase-1i.md`, `docs/development/coinmind-current-state-archive.md`, `docs/development/production-release.md`, `docs/setup/ubuntu-server-mvp.md`, `infrastructure/README.md`.
+- Riwayat dan arsip: `docs/development/current-state.md`, `docs/development/session-log.md`, `docs/development/phivealpha-phase-1i.md`, `docs/development/production-release.md`, `docs/setup/ubuntu-server-mvp.md`, `infrastructure/README.md`.
 
 ## Risiko migrasi dan rollback
 

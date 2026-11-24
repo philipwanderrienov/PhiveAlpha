@@ -15,9 +15,11 @@ registerLocaleData(localeId);
 const apiUrl = componentModule('core/idx-api');
 const { IdxApi } = await import(apiUrl);
 const detailUrl = componentModule('stock-screener/screener-detail');
+const momentumUrl = componentModule('stock-screener/momentum-snapshot');
 const pageUrl = componentModule('stock-screener/stock-screener.page', {
   '../core/idx-api': apiUrl,
   './screener-detail': detailUrl,
+  './momentum-snapshot': momentumUrl,
 });
 const { StockScreenerPage } = await import(pageUrl);
 
@@ -29,6 +31,7 @@ const { routes } = await import(componentModule('app.routes', {
   }),
   './overview/overview.page': componentModule('overview/overview.page', {
     '../core/idx-api': apiUrl,
+    '../stock-screener/momentum-snapshot': momentumUrl,
   }),
   './news-intelligence/news-intelligence.page': componentModule('news-intelligence/news-intelligence.page', {
     '../core/idx-api': apiUrl,
@@ -302,7 +305,7 @@ test('overview starts the research journey and a headline links to its issuer', 
 
   await router.navigateByUrl('/overview');
   app.tick();
-  const primary = descendants(host, node => node.tag === 'a').find(link => content(link).includes('Buka Stock Screener'));
+  const primary = descendants(host, node => node.tag === 'a').find(link => content(link).includes('Semua riset'));
   assert.equal(primary.attrs.href, '/stock-screener');
 
   await router.navigateByUrl('/news-intelligence');

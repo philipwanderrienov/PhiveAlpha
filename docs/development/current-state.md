@@ -1,3 +1,7 @@
+## 2026-11-24 — Pembersihan legacy lokal
+
+Source Java legacy, konfigurasi dan launcher legacy, serta artefak lokal bernama CoinMind dibersihkan. Startup default PhiveAlpha tetap fixture. Contoh environment memakai `phivealpha_dev_local` untuk profil development. Decommission database, layanan dan konfigurasi host memerlukan akses administrator.
+
 ## 2026-11-22 — PhiveAlpha Phase 1O-C (lokal)
 
 Evaluasi forward internal menghubungkan shortlist point-in-time ke simulator replay untuk window 2, 5 dan 10 sesi. Laporan memasangkan kandidat dan IHSG pada window yang sama, memisahkan partisi kronologis, serta mencatat overlap dan cakupan sebelum menerbitkan agregat deskriptif. Hasil fixture sintetis hanya memverifikasi perilaku kode. Maven offline 133 lulus, termasuk 11 tes baru, dan satu skip loopback. [Handoff Phase 1O-C](phivealpha-phase-1o-c.md)
@@ -77,5 +81,3 @@ Persistence IDX tersedia melalui profil opt-in `phivealpha-persistence` dan migr
 ### 2026-11-18 — PhiveAlpha Phase 1A (lokal)
 
 Fondasi aplikasi IDX tersedia pada `main` dengan entry point Spring Boot/WebFlux dan target Angular terpisah. API fixture menyediakan snapshot, Weekly Top 5, headline dan estimasi lot untuk kelima halaman. R2DBC/PostgreSQL tersedia sebagai dependensi. Mode fixture mematikan koneksi dan inisialisasi SQL. CoinMind tetap tersedia melalui build default. Kontrak, cara menjalankan demo, dan dependensi penghapusan crypto tercatat di [handoff Phase 1A](phivealpha-phase-1a.md).
-
-Status proyek crypto sebelum PhiveAlpha disimpan di [arsip migrasi](coinmind-current-state-archive.md).

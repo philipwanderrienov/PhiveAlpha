@@ -938,3 +938,7 @@ Baseline `a9756ba`. Menambah workflow point-in-time internal dengan context immu
 ## 2026-11-22 — PhiveAlpha Phase 1O-C (lokal)
 
 Baseline `80bcb2f`. Menambah evaluasi forward shortlist dengan simulator replay, IHSG berpasangan, excess return, biaya, drawdown, dan gate cakupan per partisi dan horizon. Input screening diproses terpisah dari outcome freeze. Runner PostgreSQL terisolasi tertahan probe loopback. Maven offline 133 lulus, termasuk 11 tes baru, dan satu skip loopback. [Handoff Phase 1O-C](phivealpha-phase-1o-c.md)
+
+## 2026-11-24 — Pembersihan legacy lokal
+
+Menghapus source Java, arsip lokal dan artefak build bernama CoinMind, beserta konfigurasi startup, Compose dan launcher deployment legacy. Contoh environment diarahkan ke profil development PhiveAlpha. Konfigurasi host dan database legacy menunggu akses administrator.
